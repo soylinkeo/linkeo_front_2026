@@ -1,5 +1,6 @@
 // src/pages/LandingLinkeo.jsx
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styled, { createGlobalStyle } from "styled-components";
 import imagenHome from "../assets/imagen_home.png";
 import imgTarjeta from "../assets/img_tarjeta.png";
@@ -97,7 +98,17 @@ const Btn = styled.button`
   display: inline-flex; align-items: center; gap: .5rem;
   &:hover{ background: var(--primary-color-dark); }
 `;
+const LoginBtn = styled(Btn)`
+  background: transparent;
+  border: 2px solid currentColor;
+  color: inherit;
+  &:hover{ background: rgba(255,255,255,.12); }
 
+  @media (min-width: 768px){
+    color: var(--text-dark);
+    &:hover{ background: rgba(0,0,0,.06); }
+  }
+`;
 /* --------------------------------- Sections ------------------------------- */
 const Section = styled.section`
   max-width: var(--max-width); margin: 0 auto; padding: 5rem 1rem;
@@ -214,7 +225,7 @@ const FooterBar = styled.div`
 /* ------------------------------ Landing View ------------------------------ */
 export default function LandingLinkeo(){
   const [open, setOpen] = useState(false);
-
+  const navigate = useNavigate();
   return (
     <Page>
       <Global />
@@ -228,17 +239,33 @@ export default function LandingLinkeo(){
             <i className={open ? "ri-close-line" : "ri-menu-line"} />
           </MenuBtn>
 
-          <CtaWrap>
-            <a href="https://wa.me/51987095046?text=Hola%2C%20deseo%20saber%20m%C3%A1s%20informaci%C3%B3n%20sobre%20las%20tarjetas%20NFC%20de%20Linkeo" target="_blank" rel="noreferrer">
-              <Btn className="btn"><i className="ri-whatsapp-line" /></Btn>
-            </a>
-          </CtaWrap>
-
           <Links $open={open} onClick={() => setOpen(false)}>
             <li><a href="#home">Inicio</a></li>
             <li><a href="#NFC">Tecnología NFC</a></li>
             <li><a href="#Tarjetas">Tarjetas</a></li>
+            
           </Links>
+          
+  <CtaWrap>
+  <LoginBtn
+    type="button"
+    className="btn"
+    onClick={() => navigate("/login")}
+    aria-label="Login"
+  >
+    Login
+  </LoginBtn>
+
+  {/* <a
+    href="https://wa.me/51987095046?text=Hola%2C%20deseo%20saber%20m%C3%A1s%20informaci%C3%B3n%20sobre%20las%20tarjetas%20NFC%20de%20Linkeo"
+    target="_blank"
+    rel="noreferrer"
+  >
+    <Btn className="btn" aria-label="WhatsApp">
+      <i className="ri-whatsapp-line" />
+    </Btn>
+  </a> */}
+</CtaWrap>
         </NavInner>
       </Nav>
 
