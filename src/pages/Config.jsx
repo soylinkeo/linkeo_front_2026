@@ -29,6 +29,7 @@ const Icons = {
   move: (p) => (<svg viewBox="0 0 24 24" width="16" height="16" {...p}><path fill="currentColor" d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M12 3v18M3 12h18"/></svg>),
   check: (p) => (<svg viewBox="0 0 24 24" width="16" height="16" {...p}><path fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" d="M5 13l4 4L19 7"/></svg>),
   image: (p) => (<svg viewBox="0 0 24 24" width="16" height="16" {...p}><rect fill="none" stroke="currentColor" strokeWidth="2" x="3" y="3" width="18" height="18" rx="3"/><circle fill="currentColor" cx="8.5" cy="8.5" r="1.5"/><path fill="none" stroke="currentColor" strokeWidth="2" d="M21 15l-5-5L5 21"/></svg>),
+  externalLink: (p) => (<svg viewBox="0 0 24 24" width="12" height="12" {...p}><path fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>),
 };
 
 const PLATFORMS = [
@@ -77,6 +78,41 @@ const isValidUrl = (url) => {
 
 /* ============ STYLED COMPONENTS ============ */
 const fadeIn = keyframes`from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}`;
+
+const ProfileUrlBanner = styled.a`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 18px;
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  border: 1.5px solid #bae6fd;
+  border-radius: 14px;
+  margin-bottom: 16px;
+  text-decoration: none;
+  color: #0369a1;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.15s;
+  &:hover { background: linear-gradient(135deg, #e0f2fe, #bae6fd); box-shadow: 0 3px 12px rgba(3,105,161,0.15); }
+  span.label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #0284c7;
+    background: #e0f2fe;
+    border: 1px solid #bae6fd;
+    padding: 2px 8px;
+    border-radius: 20px;
+    flex-shrink: 0;
+  }
+  span.url {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #0369a1;
+  }
+  svg { flex-shrink: 0; }
+`;
 
 const Wrap = styled.div`
   max-width: 1280px;
@@ -171,7 +207,6 @@ const IPhoneFrame = styled.div`
   padding: 14px;
   box-sizing: border-box;
   
-  /* Rim highlight */
   &::before {
     content: '';
     position: absolute;
@@ -185,7 +220,6 @@ const IPhoneFrame = styled.div`
     pointer-events: none;
   }
   
-  /* Side buttons */
   &::after {
     content: '';
     position: absolute;
@@ -238,7 +272,6 @@ const IPhoneScreen = styled.div`
   background: ${p => p.$bgCss || '#000'};
 `;
 
-/* Dynamic Island */
 const DynamicIsland = styled.div`
   position: absolute;
   top: 12px;
@@ -254,7 +287,6 @@ const DynamicIsland = styled.div`
   justify-content: center;
   gap: 8px;
   
-  /* Camera */
   &::after {
     content: '';
     width: 10px;
@@ -277,7 +309,6 @@ const ScreenContent = styled.div`
   font-family: ${p => p.$fontFamily};
   font-size: ${p => p.$fontSize}px;
   
-  /* Background */
   ${p => p.$bgImage ? `
     background-image: ${p.$overlayCss ? p.$overlayCss + ',' : ''} url(${p.$bgImage});
     background-size: ${(p.$bgZoom && p.$bgZoom !== 100) ? p.$bgZoom + '%' : 'cover'};
@@ -290,12 +321,10 @@ const ScreenContent = styled.div`
   flex-direction: column;
   gap: ${p => p.$gap}px;
   
-  /* Custom scrollbar */
   &::-webkit-scrollbar { width: 3px; }
   &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
 `;
 
-/* Avatar */
 const AvatarWrap = styled.div`
   display: flex;
   justify-content: ${p => p.$align === 'left' ? 'flex-start' : p.$align === 'right' ? 'flex-end' : 'center'};
@@ -706,11 +735,21 @@ const PositionHandle = styled.div`
 `;
 
 /* ====== Link Cards ====== */
+/* FIX: align-items: start prevents adjacent card from stretching to match height */
+/* Two independent columns — no shared row height ever */
 const LinkCardsGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  align-items: start;
   @media (max-width: 600px) { grid-template-columns: 1fr; }
+`;
+
+/* Each column stacks its own cards independently */
+const LinkCardsCol = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 `;
 
 const LinkCard = styled.div`
@@ -718,6 +757,7 @@ const LinkCard = styled.div`
   border-radius: 16px;
   overflow: hidden;
   background: #fff;
+  width: 100%;
 `;
 
 const LinkCardHeader = styled.button`
@@ -741,6 +781,75 @@ const LinkCardBody = styled.div`
   flex-direction: column;
   gap: 8px;
   border-top: 1.5px solid #f0ede8;
+`;
+
+/* FIX: URL preview link shown above the input when a valid URL exists */
+const UrlPreviewLink = styled.a`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  background: #f5f3ff;
+  border: 1.5px solid #e0e7ff;
+  border-radius: 9px;
+  color: #6366f1;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  word-break: break-all;
+  line-height: 1.4;
+  transition: background 0.15s;
+  &:hover { background: #ede9fe; }
+`;
+
+/* ====== Custom Links ====== */
+const CustomLinksWrap = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+const CustomLinkRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1.4fr auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  background: #fafaf9;
+  border: 1.5px solid #e8e6e1;
+  border-radius: 14px;
+`;
+
+const AddCustomBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 2px dashed #d1d5db;
+  background: #fafaf9;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: #6b7280;
+  width: 100%;
+  justify-content: center;
+  transition: all 0.15s;
+  &:hover { border-color: #6366f1; color: #6366f1; background: #f5f3ff; }
+`;
+
+const SmallIconBtn = styled.button`
+  all: unset;
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #9ca3af;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  &:hover { background: ${p => p.$danger ? '#fef2f2' : '#f3f4f6'}; color: ${p => p.$danger ? '#dc2626' : '#111'}; }
 `;
 
 /* ====== vCard Fields ====== */
@@ -849,7 +958,6 @@ const IconBtn = styled.button`
   &:hover { background: #f3f4f6; color: ${p => p.$danger ? '#dc2626' : '#111'}; }
 `;
 
-/* Carousel slide editor */
 const SlideList = styled.div`
   display: flex;
   flex-direction: column;
@@ -887,7 +995,6 @@ const SlideThumb = styled.div`
   img { width: 100%; height: 100%; object-fit: cover; }
 `;
 
-/* Gallery item */
 const GalleryGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -921,7 +1028,6 @@ const GalleryItemInfo = styled.div`
   gap: 4px;
 `;
 
-/* Preview widgets in iPhone */
 const PreviewCarousel = styled.div`
   position: relative;
   border-radius: 14px;
@@ -1015,6 +1121,7 @@ const DEFAULT_PROFILE = {
   contactStreet: "", contactCity: "", contactRegion: "",
   contactPostalCode: "", contactCountry: "", contactNote: "",
   showVCard: true,
+  customLinks: [],
 };
 
 const FONTS = [
@@ -1064,11 +1171,9 @@ export default function Config() {
     ? `social_tiles_theme_v10_${user.username}`
     : "social_tiles_theme_v10_anon";
 
-  // Clean up old storage keys that may contain heavy base64 data
   useEffect(() => {
     const oldKeys = ["social_tiles_theme_v9_" + (user?.username || "anon")];
     oldKeys.forEach(k => { try { localStorage.removeItem(k); } catch {} });
-    // Also clear the current key if it's suspiciously large (> 2MB)
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw && raw.length > 2_000_000) localStorage.removeItem(STORAGE_KEY);
@@ -1085,7 +1190,6 @@ export default function Config() {
   const [isDraggingBg, setIsDraggingBg] = useState(false);
   const positionPadRef = useRef(null);
 
-  // Derived: active background image
   const activeBgImage = useMemo(() => {
     const imgs = profile.bgImages || [];
     if (imgs.length === 0) return profile.bgImageDataUrl || "";
@@ -1129,8 +1233,6 @@ export default function Config() {
   }, [ctxProfile, STORAGE_KEY]);
 
   useEffect(() => {
-    // Strip base64 image data before saving to localStorage to avoid QuotaExceededError.
-    // Images (avatar, bg, pdf) only live in React state (memory) and are persisted via the backend.
     const safeProfile = {
       ...profile,
       avatarDataUrl: "",
@@ -1147,7 +1249,6 @@ export default function Config() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (e) {
-      // If quota is still exceeded (e.g. from old data), clear and retry
       try {
         localStorage.removeItem(STORAGE_KEY);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -1176,7 +1277,13 @@ export default function Config() {
   const setVisible = (k, v) => setItems(prev => prev.map(i => i.key === k ? { ...i, visible: v } : i));
   const P = (patch) => setProfile(prev => ({ ...prev, ...patch }));
 
-  // ---- Widgets ----
+  /* ---- Custom Links ---- */
+  const customLinks = profile.customLinks || [];
+  const addCustomLink = () => P({ customLinks: [...customLinks, { id: Date.now().toString(), name: '', url: '', visible: true }] });
+  const removeCustomLink = (id) => P({ customLinks: customLinks.filter(l => l.id !== id) });
+  const updateCustomLink = (id, patch) => P({ customLinks: customLinks.map(l => l.id === id ? { ...l, ...patch } : l) });
+
+  /* ---- Widgets ---- */
   const [previewCarouselIdx, setPreviewCarouselIdx] = useState(0);
   const widgets = profile.widgets || [];
 
@@ -1190,7 +1297,6 @@ export default function Config() {
   };
 
   const removeWidget = (id) => P({ widgets: widgets.filter(w => w.id !== id) });
-
   const updateWidget = (id, patch) => P({ widgets: widgets.map(w => w.id === id ? { ...w, ...patch } : w) });
 
   const moveWidget = (id, dir) => {
@@ -1201,13 +1307,11 @@ export default function Config() {
     P({ widgets: arr });
   };
 
-  // Carousel slide helpers
   const addSlide = (wId) => updateWidget(wId, { slides: [...(widgets.find(w=>w.id===wId)?.slides||[]), { id: Date.now()+'s', title: '', text: '', imageDataUrl: '' }] });
   const removeSlide = (wId, sId) => updateWidget(wId, { slides: (widgets.find(w=>w.id===wId)?.slides||[]).filter(s=>s.id!==sId) });
   const updateSlide = (wId, sId, patch) => updateWidget(wId, { slides: (widgets.find(w=>w.id===wId)?.slides||[]).map(s=>s.id===sId?{...s,...patch}:s) });
   const onSlideImage = (wId, sId, file) => { const r=new FileReader(); r.onload=()=>updateSlide(wId,sId,{imageDataUrl:r.result}); r.readAsDataURL(file); };
 
-  // Gallery item helpers
   const addGalleryItem = (wId) => updateWidget(wId, { items: [...(widgets.find(w=>w.id===wId)?.items||[]), { id: Date.now()+'g', name: '', price: '', imageDataUrl: '' }] });
   const removeGalleryItem = (wId, iId) => updateWidget(wId, { items: (widgets.find(w=>w.id===wId)?.items||[]).filter(i=>i.id!==iId) });
   const updateGalleryItem = (wId, iId, patch) => updateWidget(wId, { items: (widgets.find(w=>w.id===wId)?.items||[]).map(i=>i.id===iId?{...i,...patch}:i) });
@@ -1216,9 +1320,11 @@ export default function Config() {
   const [openWidgetIds, setOpenWidgetIds] = useState({});
   const toggleWidgetOpen = (id) => setOpenWidgetIds(prev => ({ ...prev, [id]: !prev[id] }));
 
-  const visibleLinks = useMemo(() =>
-    items.filter(i => i.visible && isValidUrl(i.url)).map((i, idx) => ({ ...i, href: normalizeUrl(i.url), order: idx })),
-  [items]);
+  const visibleLinks = useMemo(() => {
+    const platform = items.filter(i => i.visible && isValidUrl(i.url)).map((i, idx) => ({ ...i, href: normalizeUrl(i.url), order: idx, isCustom: false }));
+    const custom = (profile.customLinks || []).filter(l => l.visible && l.url && l.url.trim()).map((l, idx) => ({ key: `custom_${l.id}`, name: l.name || 'Enlace', url: l.url, href: normalizeUrl(l.url), visible: true, order: platform.length + idx, isCustom: true }));
+    return [...platform, ...custom];
+  }, [items, profile.customLinks]);
 
   const validateOne = k => {
     const i = byKey(k);
@@ -1326,15 +1432,34 @@ export default function Config() {
   };
 
   /* ---- Backend ---- */
-  const toServerPayload = () => ({
-    displayName: profile.title, bio: profile.description,
-    theme: { ...profile, bgImageUrl: activeBgImage, avatarUrl: profile.avatarDataUrl, pdfUrl: profile.pdfDataUrl },
-    links: items.map((i, order) => ({ key: i.key, url: i.url, visible: i.visible, order })),
-  });
+  const toServerPayload = () => {
+    // eslint-disable-next-line no-unused-vars
+    const { customLinks: _cl, bgImages: _bi, avatarDataUrl: _av, pdfDataUrl: _pdf, bgImageDataUrl: _bgd, widgets: _w, ...themeRest } = profile;
+    return {
+      displayName: profile.title,
+      bio: profile.description,
+      theme: { ...themeRest, bgImageUrl: activeBgImage, avatarUrl: profile.avatarDataUrl, pdfUrl: profile.pdfDataUrl },
+      links: items.map((i, order) => ({ key: i.key, url: i.url, visible: i.visible, order })),
+      customLinks: (profile.customLinks || []).map(({ id, name, url, visible }) => ({ id, name, url, visible })),
+    };
+  };
 
   const fromServerDoc = (doc) => {
     const t = doc?.theme || {};
-    const serverProfile = { ...DEFAULT_PROFILE, ...t, title: t.title || doc?.displayName || "", description: t.description || doc?.bio || "", bgImageDataUrl: t.bgImageUrl || "", avatarDataUrl: t.avatarUrl || "", pdfDataUrl: t.pdfUrl || "", bgImages: t.bgImages || (t.bgImageUrl ? [{ dataUrl: t.bgImageUrl, name: "fondo.jpg" }] : []) };
+    // customLinks: prefer top-level doc.customLinks, fallback to theme.customLinks
+    const restoredCustomLinks = Array.isArray(doc?.customLinks) && doc.customLinks.length > 0
+      ? doc.customLinks
+      : Array.isArray(t?.customLinks) ? t.customLinks : [];
+    const serverProfile = {
+      ...DEFAULT_PROFILE, ...t,
+      title: t.title || doc?.displayName || "",
+      description: t.description || doc?.bio || "",
+      bgImageDataUrl: t.bgImageUrl || "",
+      avatarDataUrl: t.avatarUrl || "",
+      pdfDataUrl: t.pdfUrl || "",
+      bgImages: t.bgImages || (t.bgImageUrl ? [{ dataUrl: t.bgImageUrl, name: "fondo.jpg" }] : []),
+      customLinks: restoredCustomLinks,
+    };
     const serverLinks = Array.isArray(doc?.links) ? doc.links : [];
     const mergedLinks = PLATFORMS.map(p => { const f = serverLinks.find(x => x.key === p.key); return { key: p.key, url: f?.url || "", visible: f?.visible ?? true, open: false }; });
     return { profile: serverProfile, items: mergedLinks };
@@ -1373,6 +1498,19 @@ export default function Config() {
 
   return (
     <Wrap>
+      {user?.username && (
+        <ProfileUrlBanner
+          href={`${window.location.origin}/${user.username.toLowerCase()}`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>
+          </svg>
+          <span className="label">Tu página pública</span>
+          <span className="url">{window.location.origin}/{user.username.toLowerCase()}</span>
+        </ProfileUrlBanner>
+      )}
       <Header>
         <h1>{user ? `✦ Configura tu perfil — ${user.username || user.email}` : "✦ Configura tu perfil"}</h1>
         <Actions>
@@ -1451,16 +1589,15 @@ export default function Config() {
                 <Row>
                   <Label>Tipo de fondo:</Label>
                   <SegControl>
-              {['solid','gradient','image'].map(m => (
-  m === 'image' ? null :
-  <button key={m} className={profile.bgMode === m ? 'active' : ''} onClick={() => P({ bgMode: m })}>
-    {m === 'solid' ? '⬛ Sólido' : '🎨 Degradado'}
-  </button>
-))}
+                    {['solid','gradient','image'].map(m => (
+                      m === 'image' ? null :
+                      <button key={m} className={profile.bgMode === m ? 'active' : ''} onClick={() => P({ bgMode: m })}>
+                        {m === 'solid' ? '⬛ Sólido' : '🎨 Degradado'}
+                      </button>
+                    ))}
                   </SegControl>
                 </Row>
 
-                {/* SOLID / GRADIENT */}
                 {(profile.bgMode === 'solid' || profile.bgMode === 'gradient') && (
                   <>
                     <Row>
@@ -1486,12 +1623,10 @@ export default function Config() {
                         <SliderValue>{profile.bgAngle}°</SliderValue>
                       </SliderRow>
                     )}
-                    {/* Live preview swatch */}
                     <div style={{ height: 60, borderRadius: 12, background: bgCss, border: '1.5px solid #e8e6e1', transition: 'background 0.3s' }} />
                   </>
                 )}
 
-                {/* IMAGE MODE */}
                 {profile.bgMode === 'image' && (
                   <ImageManagerWrap>
                     <Label>Imágenes de fondo ({bgImages.length}):</Label>
@@ -1537,7 +1672,6 @@ export default function Config() {
                         <Label>📍 Posición y zoom de la imagen activa</Label>
                         <p style={{ margin: 0, fontSize: 12, color: '#9ca3af' }}>Haz clic en el visor para mover el punto focal</p>
 
-                        {/* Visual position pad */}
                         <PositionPad
                           ref={positionPadRef}
                           $bgImage={activeBgImage}
@@ -1663,32 +1797,109 @@ export default function Config() {
             </SectionHeader>
             {openStep === 5 && (
               <SectionBody>
+                {/* FIX: align-items: start on LinkCardsGrid prevents the side card
+                    from stretching to match the open card's height, which made it
+                    look like it was "opening" with empty content */}
                 <LinkCardsGrid>
-                  {PLATFORMS.map(p => {
-                    const it = items.find(i => i.key === p.key);
-                    const Icon = Icons[p.key] || Icons.custom;
-                    return (
-                      <LinkCard key={p.key}>
-                        <LinkCardHeader $brand={p.brand} onClick={() => toggleOpen(p.key)}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon />{p.name}</span>
-                          <span style={{ fontSize: 11, background: 'rgba(255,255,255,0.2)', padding: '3px 8px', borderRadius: 6 }}>
-                            {it?.url ? '✓' : 'Editar'}
-                          </span>
-                        </LinkCardHeader>
-                        {it?.open && (
-                          <LinkCardBody>
-                            <TextInput type="text" placeholder={PLACEHOLDERS[p.key]} value={it?.url || ""} onChange={e => setUrl(p.key, e.target.value)} onBlur={() => validateOne(p.key)} />
-                            {errors[p.key] && <Error>{errors[p.key]}</Error>}
-                            <Label as="label" style={{ fontSize: 13 }}>
-                              <input type="checkbox" checked={it?.visible ?? true} onChange={e => setVisible(p.key, e.target.checked)} />
-                              Visible en tu perfil
-                            </Label>
-                          </LinkCardBody>
-                        )}
-                      </LinkCard>
-                    );
-                  })}
+                  {[0, 1].map(col => (
+                    <LinkCardsCol key={col}>
+                      {PLATFORMS.filter((_, idx) => idx % 2 === col).map(p => {
+                        const it = items.find(i => i.key === p.key);
+                        const Icon = Icons[p.key] || Icons.custom;
+                        return (
+                          <LinkCard key={p.key}>
+                            <LinkCardHeader $brand={p.brand} onClick={() => toggleOpen(p.key)}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon />{p.name}</span>
+                              <span style={{ fontSize: 11, background: 'rgba(255,255,255,0.2)', padding: '3px 8px', borderRadius: 6 }}>
+                                {it?.open ? '▲' : it?.url ? '✓' : 'Editar'}
+                              </span>
+                            </LinkCardHeader>
+                            {it?.open && (
+                              <LinkCardBody>
+                                {it?.url && it.url.trim().length > 0 && (
+                                  <UrlPreviewLink
+                                    href={normalizeUrl(it.url)}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    onClick={e => e.stopPropagation()}
+                                  >
+                                    <Icons.externalLink />
+                                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                      {normalizeUrl(it.url)}
+                                    </span>
+                                  </UrlPreviewLink>
+                                )}
+                                <TextInput
+                                  type="text"
+                                  placeholder={PLACEHOLDERS[p.key]}
+                                  value={it?.url || ""}
+                                  onChange={e => setUrl(p.key, e.target.value)}
+                                  onBlur={() => validateOne(p.key)}
+                                />
+                                {errors[p.key] && <Error>{errors[p.key]}</Error>}
+                                <Label as="label" style={{ fontSize: 13 }}>
+                                  <input type="checkbox" checked={it?.visible ?? true} onChange={e => setVisible(p.key, e.target.checked)} />
+                                  Visible en tu perfil
+                                </Label>
+                              </LinkCardBody>
+                            )}
+                          </LinkCard>
+                        );
+                      })}
+                    </LinkCardsCol>
+                  ))}
                 </LinkCardsGrid>
+              </SectionBody>
+            )}
+          </Section>
+
+          {/* STEP 5b: Custom Links */}
+          <Section>
+            <SectionHeader onClick={() => setOpenStep(s => s === 51 ? 0 : 51)}>
+              <h3><StepNum>+</StepNum> Mis enlaces personalizados</h3>
+              <ChevronIcon $open={openStep === 51}>⌄</ChevronIcon>
+            </SectionHeader>
+            {openStep === 51 && (
+              <SectionBody>
+                <CustomLinksWrap>
+                  {customLinks.length === 0 && (
+                    <div style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, padding: '16px 0' }}>
+                      Aún no tienes enlaces personalizados. ¡Agrega el primero!
+                    </div>
+                  )}
+                  {customLinks.map(l => (
+                    <CustomLinkRow key={l.id}>
+                      <TextInput
+                        placeholder="Nombre (ej: Mi tienda)"
+                        value={l.name}
+                        onChange={e => updateCustomLink(l.id, { name: e.target.value })}
+                        style={{ margin: 0 }}
+                      />
+                      <TextInput
+                        placeholder="https://..."
+                        value={l.url}
+                        onChange={e => updateCustomLink(l.id, { url: e.target.value })}
+                        style={{ margin: 0 }}
+                      />
+                      <SmallIconBtn
+                        title={l.visible ? 'Ocultar' : 'Mostrar'}
+                        onClick={() => updateCustomLink(l.id, { visible: !l.visible })}
+                      >
+                        {l.visible
+                          ? <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 5C7 5 2.7 8.6 1 13.5 2.7 18.4 7 22 12 22s9.3-3.6 11-8.5C21.3 8.6 17 5 12 5Zm0 13a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9Zm0-7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z"/></svg>
+                          : <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M17.9 5.1 16.5 6.5A9.8 9.8 0 0 0 12 5C7 5 2.7 8.6 1 13.5c.8 2.3 2.2 4.3 4.1 5.8l-1.5 1.6 1.4 1.4 14-14-1-1.2ZM12 8a5.3 5.3 0 0 1 1.5.2L9.2 12.5A4.4 4.4 0 0 1 9 11.5 3 3 0 0 1 12 8Zm0 9c-2.8 0-5.3-1.5-7-4a9 9 0 0 1 3.5-3.3l-1.3 1.3a5 5 0 0 0 6.1 6.1L12 18.2c0-.1-.1-.2-.1-.3l.1.1Z"/></svg>
+                        }
+                      </SmallIconBtn>
+                      <SmallIconBtn $danger title="Eliminar" onClick={() => removeCustomLink(l.id)}>
+                        <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" d="M18 6L6 18M6 6l12 12"/></svg>
+                      </SmallIconBtn>
+                    </CustomLinkRow>
+                  ))}
+                  <AddCustomBtn type="button" onClick={addCustomLink}>
+                    <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" d="M12 5v14M5 12h14"/></svg>
+                    Agregar enlace
+                  </AddCustomBtn>
+                </CustomLinksWrap>
               </SectionBody>
             )}
           </Section>
@@ -1797,6 +2008,26 @@ export default function Config() {
                   )}
 
                   {visibleLinks.map(l => {
+                    if (l.isCustom) {
+                      const { bg, border, text } = btnColorsFor('custom');
+                      const radius = profile.btnPill ? 999 : profile.btnRadius;
+                      const br = profile.btnVariant === 'outline' ? border : profile.btnUseBrand ? border : 'transparent';
+                      const bgColor = profile.btnVariant === 'filled' ? bg : profile.btnVariant === 'glass' ? 'rgba(255,255,255,.18)' : 'transparent';
+                      return (
+                        <LinkRow key={`prev-${l.key}`} $align={profile.btnAlign}>
+                          <div style={{ width: profile.btnAlign === 'center' ? `${profile.btnWidth}%` : '100%' }}>
+                            <LinkBtn
+                              href={l.href} target="_blank" rel="noreferrer"
+                              $variant={profile.btnVariant} $bg={bgColor} $border={br}
+                              $borderWidth={profile.btnBorderWidth} $text={text} $radius={radius}
+                              $shadow={profile.btnShadow} $iconSide={profile.btnIconSide} $contentAlign={profile.btnContentAlign}
+                            >
+                              <Icons.custom /><strong>{l.name}</strong>
+                            </LinkBtn>
+                          </div>
+                        </LinkRow>
+                      );
+                    }
                     const { bg, border, text } = btnColorsFor(l.key);
                     const Icon = Icons[l.key] || Icons.custom;
                     const radius = profile.btnPill ? 999 : profile.btnRadius;
@@ -1822,7 +2053,7 @@ export default function Config() {
                   {widgets.map(w => {
                     if (w.visible === false) return null;
                     if (w.type === 'carousel') {
-                      return null; // oculto temporalmente
+                      return null;
                     }
                     if (w.type === 'card') {
                       return (
@@ -1838,12 +2069,12 @@ export default function Config() {
                       );
                     }
                     if (w.type === 'gallery') {
-                      const items = w.items || [];
+                      const galleryItems = w.items || [];
                       return (
                         <PreviewGallery key={w.id}>
                           {w.title && <div style={{ fontSize: 12, fontWeight: 700, color: profile.textColor, opacity: 0.85, paddingBottom: 4 }}>{w.title}</div>}
-                          <GalleryPreviewGrid $cols={Math.min(items.length, 2)}>
-                            {items.slice(0, 4).map(item => (
+                          <GalleryPreviewGrid $cols={Math.min(galleryItems.length, 2)}>
+                            {galleryItems.slice(0, 4).map(item => (
                               <GalleryPreviewItem key={item.id}>
                                 {item.imageDataUrl
                                   ? <img src={item.imageDataUrl} alt={item.name} />
@@ -1865,19 +2096,18 @@ export default function Config() {
                   })}
 
                   {(profile.showVCard ?? true) && (
-                  <div
-                    onClick={downloadVCard}
-                    style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', color: profile.textColor, fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, border: '1px solid rgba(255,255,255,0.2)' }}
-                  >
-                    📇 Guardar contacto
-                  </div>
+                    <div
+                      onClick={downloadVCard}
+                      style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', color: profile.textColor, fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, border: '1px solid rgba(255,255,255,0.2)' }}
+                    >
+                      📇 Guardar contacto
+                    </div>
                   )}
                 </ScreenContent>
               </IPhoneScreen>
             </IPhoneFrame>
           </IPhoneWrapper>
 
-          {/* Status bar label */}
           <div style={{ marginTop: 10, fontSize: 12, color: '#9ca3af', textAlign: 'center', fontWeight: 500 }}>
             Vista previa iPhone 15 Pro
           </div>

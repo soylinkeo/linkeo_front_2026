@@ -22,19 +22,19 @@ const Icons = {
 };
 
 const PLATFORMS = [
-  { key: "whatsapp",  name: "WhatsApp",     brand: "#25D366" },
-  { key: "phone",     name: "Teléfono",     brand: "#0ea5e9" },
-  { key: "email",     name: "Email",        brand: "#0ea5e9" },
-  { key: "instagram", name: "Instagram",    brand: "#C13584" },
-  { key: "tiktok",    name: "TikTok",       brand: "#000000" },
-  { key: "facebook",  name: "Facebook",     brand: "#1877F2" },
-  { key: "linkedin",  name: "LinkedIn",     brand: "#0A66C2" },
-  { key: "youtube",   name: "YouTube",      brand: "#FF0000" },
-  { key: "website",   name: "Página Web",   brand: "#0ea5e9" },
-  { key: "x",         name: "X (Twitter)",  brand: "#111111" },
-  { key: "telegram",  name: "Telegram",     brand: "#229ED9" },
-  { key: "pdf",       name: "PDF",          brand: "#6b7280" },
-  { key: "custom",    name: "Personalizado",brand: "#7c3aed" },
+  { key: "whatsapp",  name: "WhatsApp",      brand: "#25D366" },
+  { key: "phone",     name: "Teléfono",      brand: "#0ea5e9" },
+  { key: "email",     name: "Email",         brand: "#0ea5e9" },
+  { key: "instagram", name: "Instagram",     brand: "#C13584" },
+  { key: "tiktok",    name: "TikTok",        brand: "#000000" },
+  { key: "facebook",  name: "Facebook",      brand: "#1877F2" },
+  { key: "linkedin",  name: "LinkedIn",      brand: "#0A66C2" },
+  { key: "youtube",   name: "YouTube",       brand: "#FF0000" },
+  { key: "website",   name: "Página Web",    brand: "#0ea5e9" },
+  { key: "x",         name: "X (Twitter)",   brand: "#111111" },
+  { key: "telegram",  name: "Telegram",      brand: "#229ED9" },
+  { key: "pdf",       name: "PDF",           brand: "#6b7280" },
+  { key: "custom",    name: "Personalizado", brand: "#7c3aed" },
 ];
 
 const normalizeUrl = (url) => {
@@ -49,7 +49,6 @@ const isValidUrl = (url) => {
   try { new URL(normalizeUrl(url)); return true; } catch { return false; }
 };
 
-/* ── Google Fonts ── */
 const FONTS_MAP = [
   { label: "Inter",            css: "Inter:wght@400;600;700" },
   { label: "Poppins",          css: "Poppins:wght@400;600;700" },
@@ -71,233 +70,115 @@ function loadFont(family) {
   document.head.appendChild(l);
 }
 
-/* ── Animations ── */
 const fadeUp = keyframes`from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}`;
 const blink  = keyframes`0%,100%{opacity:1}50%{opacity:.3}`;
 
-/* ── Global reset ── */
 const GlobalStyle = createGlobalStyle`
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body, #root { height: 100%; -webkit-font-smoothing: antialiased; }
 `;
 
-/*
-  Igual que ScreenContent en el editor:
-  position fijo ocupando todo el viewport, scroll interno.
-  El fondo se calcula sobre el viewport (no sobre el contenido),
-  así siempre cubre el 100% sin importar cuántos links haya.
-*/
 const Page = styled.div`
-  position: fixed;
-  inset: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
+  position: fixed; inset: 0; overflow-y: auto; overflow-x: hidden;
   color: ${p => p.$color || "#fff"};
   font-family: ${p => p.$fontFamily};
   font-size: ${p => p.$fontSize}px;
-
   ${p => p.$bgImage ? `
     background-image: ${p.$overlayCss ? p.$overlayCss + "," : ""} url(${p.$bgImage});
     background-size: ${(p.$bgZoom && p.$bgZoom !== 100) ? p.$bgZoom + "%" : "cover"};
     background-position: ${p.$bgPosX ?? 50}% ${p.$bgPosY ?? 50}%;
-    background-repeat: no-repeat;
-    background-attachment: scroll;
+    background-repeat: no-repeat; background-attachment: scroll;
   ` : `background: ${p.$bgCss || "#0f172a"};`}
 `;
 
-/*
-  Narrow content column — max 480 px, centered.
-  On a real phone it fills the screen edge-to-edge with padding.
-  On a desktop it stays skinny, exactly like Linktree / Beacons.
-*/
 const Col = styled.div`
-  max-width: 480px;
-  margin: 0 auto;
+  max-width: 480px; margin: 0 auto;
   padding: ${p => p.$pad}px;
   padding-top:    calc(${p => p.$pad}px + ${p => p.$offset}px + env(safe-area-inset-top,    0px));
   padding-bottom: calc(${p => p.$pad}px +                       env(safe-area-inset-bottom, 0px));
-  display: flex;
-  flex-direction: column;
-  gap: ${p => p.$gap}px;
+  display: flex; flex-direction: column; gap: ${p => p.$gap}px;
   animation: ${fadeUp} 0.38s ease both;
 `;
 
-/* Avatar */
 const AvatarWrap = styled.div`
   display: flex;
   justify-content: ${p => p.$a === "left" ? "flex-start" : p.$a === "right" ? "flex-end" : "center"};
-  img {
-    width: 96px; height: 96px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid rgba(255,255,255,.25);
-    box-shadow: 0 8px 28px rgba(0,0,0,.35);
-  }
+  img { width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.25);box-shadow:0 8px 28px rgba(0,0,0,.35); }
 `;
 
-/* Name & bio */
 const Bio = styled.div`
   text-align: ${p => p.$a};
-  h2 {
-    font-size: 1.45em; font-weight: 700; letter-spacing: -.3px;
-    line-height: 1.15; text-shadow: 0 2px 10px rgba(0,0,0,.35);
-    margin-bottom: 6px;
-  }
-  p {
-    font-size: .88em; opacity: .85; line-height: 1.55;
-    text-shadow: 0 1px 5px rgba(0,0,0,.3);
-  }
+  h2 { font-size:1.45em;font-weight:700;letter-spacing:-.3px;line-height:1.15;text-shadow:0 2px 10px rgba(0,0,0,.35);margin-bottom:6px; }
+  p  { font-size:.88em;opacity:.85;line-height:1.55;text-shadow:0 1px 5px rgba(0,0,0,.3); }
 `;
 
-/* Social link button row */
 const BtnRow = styled.div`
   display: flex;
   justify-content: ${p => p.$center ? "center" : "stretch"};
 `;
 
 const SocialBtn = styled.a`
-  display: flex; align-items: center; gap: 10px;
-  text-decoration: none; width: 100%;
-  padding: 13px 16px;
-  border-radius: ${p => p.$r}px;
-  border: ${p => `${p.$bw}px solid ${p.$bc}`};
-  background: ${p => p.$bg};
-  color: ${p => p.$tc};
-  backdrop-filter: ${p => p.$blur ? "blur(10px)" : "none"};
-  box-shadow: ${p => p.$sh ? "0 4px 18px rgba(0,0,0,.22)" : "none"};
-  flex-direction: ${p => p.$flip ? "row-reverse" : "row"};
-  justify-content: ${p => p.$ca === "center" ? "center" : p.$ca === "right" ? "flex-end" : "flex-start"};
-  font-size: .93em; font-weight: 600; min-width: 0;
-  transition: opacity .15s, transform .12s;
-  -webkit-tap-highlight-color: transparent;
-  &:hover  { opacity: .9; transform: translateY(-1px); }
-  &:active { transform: scale(.98); opacity: .85; }
-  strong { flex: ${p => p.$ca === "left" ? 1 : "initial"}; min-width: 0; }
+  display:flex;align-items:center;gap:10px;text-decoration:none;width:100%;
+  padding:13px 16px;border-radius:${p=>p.$r}px;
+  border:${p=>`${p.$bw}px solid ${p.$bc}`};background:${p=>p.$bg};color:${p=>p.$tc};
+  backdrop-filter:${p=>p.$blur?"blur(10px)":"none"};
+  box-shadow:${p=>p.$sh?"0 4px 18px rgba(0,0,0,.22)":"none"};
+  flex-direction:${p=>p.$flip?"row-reverse":"row"};
+  justify-content:${p=>p.$ca==="center"?"center":p.$ca==="right"?"flex-end":"flex-start"};
+  font-size:.93em;font-weight:600;min-width:0;
+  transition:opacity .15s,transform .12s;-webkit-tap-highlight-color:transparent;
+  &:hover{opacity:.9;transform:translateY(-1px);}&:active{transform:scale(.98);opacity:.85;}
+  strong{flex:${p=>p.$ca==="left"?1:"initial"};min-width:0;}
 `;
 
-/* Save contact */
 const VCardBtn = styled.button`
-  all: unset;
-  box-sizing: border-box;
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  width: 100%; padding: 13px 16px; border-radius: 14px;
-  background: rgba(255,255,255,.13); backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,.22);
-  color: inherit; font-size: .93em; font-weight: 600; cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: background .15s;
-  &:hover  { background: rgba(255,255,255,.22); }
-  &:active { background: rgba(255,255,255,.09); }
+  all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;padding:13px 16px;border-radius:14px;
+  background:rgba(255,255,255,.13);backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.22);color:inherit;font-size:.93em;font-weight:600;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:background .15s;
+  &:hover{background:rgba(255,255,255,.22);}&:active{background:rgba(255,255,255,.09);}
 `;
 
-/* Shared widget label */
-const WLabel = styled.div`
-  font-size: .72em; font-weight: 700; opacity: .6;
-  text-transform: uppercase; letter-spacing: .6px;
-`;
+const WLabel = styled.div`font-size:.72em;font-weight:700;opacity:.6;text-transform:uppercase;letter-spacing:.6px;`;
 
-/* ── Carousel ── */
-const Carousel = styled.div`
-  border-radius: 18px; overflow: hidden;
-  background: rgba(0,0,0,.18); backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,.1);
-`;
-
+const Carousel = styled.div`border-radius:18px;overflow:hidden;background:rgba(0,0,0,.18);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1);`;
 const Slide = styled.div`
-  position: relative;
-  min-height: ${p => p.$img ? "200px" : "80px"};
-  padding: 20px;
-  display: flex; flex-direction: column; justify-content: flex-end; gap: 5px;
-  ${p => p.$img ? `
-    background-image:
-      linear-gradient(to top, rgba(0,0,0,.75) 0%, rgba(0,0,0,.04) 60%),
-      url(${p.$img});
-    background-size: cover; background-position: center;
-  ` : "background: rgba(255,255,255,.07);"}
+  position:relative;min-height:${p=>p.$img?"200px":"80px"};padding:20px;
+  display:flex;flex-direction:column;justify-content:flex-end;gap:5px;
+  ${p=>p.$img?`background-image:linear-gradient(to top,rgba(0,0,0,.75) 0%,rgba(0,0,0,.04) 60%),url(${p.$img});background-size:cover;background-position:center;`:"background:rgba(255,255,255,.07);"}
 `;
-
 const SlideH = styled.div`font-size:1em;font-weight:700;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.6);`;
 const SlideP = styled.div`font-size:.84em;color:rgba(255,255,255,.88);line-height:1.45;text-shadow:0 1px 4px rgba(0,0,0,.5);`;
-
-const CtrlRow = styled.div`
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 9px 14px 10px;
-`;
+const CtrlRow = styled.div`display:flex;align-items:center;justify-content:space-between;padding:9px 14px 10px;`;
 const Dots = styled.div`display:flex;gap:6px;align-items:center;`;
-const Dot  = styled.button`
-  all: unset;
-  width: ${p => p.$on ? "18px" : "7px"}; height: 7px; border-radius: 4px;
-  background: ${p => p.$on ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.28)"};
-  cursor: pointer; transition: all .2s ease;
-  -webkit-tap-highlight-color: transparent;
-`;
-const Arr = styled.button`
-  all: unset; width: 34px; height: 34px; border-radius: 50%;
-  background: rgba(255,255,255,.14); display: flex; align-items: center;
-  justify-content: center; cursor: pointer; font-size: 17px;
-  color: rgba(255,255,255,.9); transition: background .15s;
-  -webkit-tap-highlight-color: transparent;
-  &:hover    { background: rgba(255,255,255,.26); }
-  &:disabled { opacity: .22; cursor: default; }
-`;
+const Dot  = styled.button`all:unset;width:${p=>p.$on?"18px":"7px"};height:7px;border-radius:4px;background:${p=>p.$on?"rgba(255,255,255,.9)":"rgba(255,255,255,.28)"};cursor:pointer;transition:all .2s ease;-webkit-tap-highlight-color:transparent;`;
+const Arr  = styled.button`all:unset;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px;color:rgba(255,255,255,.9);transition:background .15s;-webkit-tap-highlight-color:transparent;&:hover{background:rgba(255,255,255,.26);}&:disabled{opacity:.22;cursor:default;}`;
 
-/* ── Info Card ── */
-const ICard = styled.div`
-  border-radius: 18px; padding: 18px;
-  background: ${p => p.$bg || "rgba(255,255,255,.13)"};
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,.15);
-  display: flex; align-items: flex-start; gap: 14px;
-`;
-const IIcon = styled.span`font-size:1.8em;line-height:1;flex-shrink:0;`;
-const IBody = styled.div`flex:1;min-width:0;`;
-const ITitle= styled.div`font-size:1em;font-weight:700;color:${p=>p.$c||"#fff"};margin-bottom:5px;line-height:1.2;`;
-const IText = styled.div`font-size:.84em;color:${p=>p.$c||"#fff"};opacity:.85;line-height:1.55;`;
+const ICard  = styled.div`border-radius:18px;padding:18px;background:${p=>p.$bg||"rgba(255,255,255,.13)"};backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.15);display:flex;align-items:flex-start;gap:14px;`;
+const IIcon  = styled.span`font-size:1.8em;line-height:1;flex-shrink:0;`;
+const IBody  = styled.div`flex:1;min-width:0;`;
+const ITitle = styled.div`font-size:1em;font-weight:700;color:${p=>p.$c||"#fff"};margin-bottom:5px;line-height:1.2;`;
+const IText  = styled.div`font-size:.84em;color:${p=>p.$c||"#fff"};opacity:.85;line-height:1.55;`;
 
-/* ── Gallery ── */
-const Gallery = styled.div`
-  border-radius: 18px; overflow: hidden;
-  background: rgba(255,255,255,.07); backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,.1);
-  padding: 12px; display: flex; flex-direction: column; gap: 10px;
-`;
-const GGrid = styled.div`display:grid;grid-template-columns:repeat(2,1fr);gap:8px;`;
-const GItem = styled.div`
-  border-radius: 12px; overflow: hidden;
-  background: rgba(255,255,255,.08); cursor: pointer;
-  transition: transform .15s;
-  -webkit-tap-highlight-color: transparent;
-  &:hover  { transform: scale(1.02); }
-  &:active { transform: scale(.98); }
-`;
-const GThumb = styled.div`
-  width:100%; aspect-ratio:1; overflow:hidden;
-  background:rgba(255,255,255,.06);
-  display:flex;align-items:center;justify-content:center;font-size:2em;
-  img{width:100%;height:100%;object-fit:cover;display:block;}
-`;
+const Gallery = styled.div`border-radius:18px;overflow:hidden;background:rgba(255,255,255,.07);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1);padding:12px;display:flex;flex-direction:column;gap:10px;`;
+const GGrid  = styled.div`display:grid;grid-template-columns:repeat(2,1fr);gap:8px;`;
+const GItem  = styled.div`border-radius:12px;overflow:hidden;background:rgba(255,255,255,.08);cursor:pointer;transition:transform .15s;-webkit-tap-highlight-color:transparent;&:hover{transform:scale(1.02);}&:active{transform:scale(.98);}`;
+const GThumb = styled.div`width:100%;aspect-ratio:1;overflow:hidden;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:2em;img{width:100%;height:100%;object-fit:cover;display:block;}`;
 const GInfo  = styled.div`padding:7px 9px 9px;`;
 const GName  = styled.div`font-size:.78em;font-weight:700;color:${p=>p.$c||"#fff"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`;
 const GPrice = styled.div`font-size:.73em;color:${p=>p.$c||"#fff"};opacity:.68;margin-top:2px;`;
 
-/* ── Status screens ── */
-const Center = styled.div`
-  min-height:100vh;display:flex;align-items:center;justify-content:center;
-  background:#0b1018;font-family:system-ui,sans-serif;
-`;
-const Pulse = styled.div`color:rgba(255,255,255,.45);font-size:15px;animation:${blink} 1.5s ease infinite;`;
-const Err   = styled.div`
-  background:rgba(127,29,29,.35);border:1px solid rgba(239,68,68,.35);
-  color:#fecaca;padding:18px 22px;border-radius:16px;
-  max-width:320px;text-align:center;font-size:14px;line-height:1.5;
-`;
+const Center = styled.div`min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0b1018;font-family:system-ui,sans-serif;`;
+const Pulse  = styled.div`color:rgba(255,255,255,.45);font-size:15px;animation:${blink} 1.5s ease infinite;`;
+const Err    = styled.div`background:rgba(127,29,29,.35);border:1px solid rgba(239,68,68,.35);color:#fecaca;padding:18px 22px;border-radius:16px;max-width:320px;text-align:center;font-size:14px;line-height:1.5;`;
 
 /* =================== vCard =================== */
 function buildVCard(theme, links) {
-  const esc = s => (s || "").replace(/\r?\n/g,"\\n").replace(/,/g,"\\,").replace(/;/g,"\\;");
+  const esc = s => (s||"").replace(/\r?\n/g,"\\n").replace(/,/g,"\\,").replace(/;/g,"\\;");
   const note = [
     theme.contactNote,
-    links.map(l=>`${PLATFORMS.find(x=>x.key===l.key)?.name||l.key}: ${l.href}`).join("\\n"),
+    links.map(l=>`${PLATFORMS.find(x=>x.key===l.key)?.name||l.name||l.key}: ${l.href}`).join("\\n"),
   ].filter(Boolean).join("\\n");
   return [
     "BEGIN:VCARD","VERSION:3.0",
@@ -313,22 +194,22 @@ function buildVCard(theme, links) {
   ].filter(Boolean).join("\r\n");
 }
 
-/* =================== WIDGET COMPONENTS =================== */
-function CarouselWidget({ w, tc }) {
+/* =================== WIDGETS =================== */
+function CarouselWidget({ w }) {
   const slides = w.slides || [];
   const [i, setI] = useState(0);
   if (!slides.length) return null;
   const s = slides[i];
   return (
     <Carousel>
-      {w.title && <WLabel style={{ color: tc, padding: "10px 14px 0" }}>{w.title}</WLabel>}
-      <Slide $img={s.imageDataUrl} $hasImg={!!s.imageDataUrl}>
+      {w.title && <WLabel style={{ padding: "10px 14px 0" }}>{w.title}</WLabel>}
+      <Slide $img={s.imageDataUrl}>
         {s.title && <SlideH>{s.title}</SlideH>}
         {s.text  && <SlideP>{s.text}</SlideP>}
       </Slide>
       {slides.length > 1 && (
         <CtrlRow>
-          <Arr onClick={()=>setI(v=>Math.max(0,v-1))}         disabled={i===0}>‹</Arr>
+          <Arr onClick={()=>setI(v=>Math.max(0,v-1))} disabled={i===0}>‹</Arr>
           <Dots>{slides.map((_,j)=><Dot key={j} $on={j===i} onClick={()=>setI(j)}/>)}</Dots>
           <Arr onClick={()=>setI(v=>Math.min(slides.length-1,v+1))} disabled={i===slides.length-1}>›</Arr>
         </CtrlRow>
@@ -401,7 +282,7 @@ export default function PublicProfile() {
     return () => { alive = false; };
   }, [slug]);
 
-  const t = doc?.theme || {};
+  const t  = doc?.theme || {};
   const th = {
     title:           t.title           || doc?.displayName || "",
     description:     t.description     || doc?.bio         || "",
@@ -461,12 +342,23 @@ export default function PublicProfile() {
     ? `linear-gradient(${th.bgAngle}deg,${th.bgColor} 0%,${th.bgColor2} 100%)`
     : th.bgMode === "solid" ? th.bgColor : "#000";
 
-  const links = useMemo(() => {
+  /* ── Platform links ── */
+  const platformLinks = useMemo(() => {
     return (Array.isArray(doc?.links) ? doc.links : [])
       .filter(l => (l?.visible ?? true) && isValidUrl(l?.url))
       .sort((a,b) => (a?.order??9999)-(b?.order??9999))
-      .map(l => ({ ...l, href: normalizeUrl(l.url) }));
+      .map(l => ({ ...l, href: normalizeUrl(l.url), isCustom: false }));
   }, [doc]);
+
+  /* ── ✅ Custom links from doc.customLinks ── */
+  const customLinks = useMemo(() => {
+    return (Array.isArray(doc?.customLinks) ? doc.customLinks : [])
+      .filter(l => (l?.visible ?? true) && l?.url && l.url.trim())
+      .map(l => ({ ...l, href: normalizeUrl(l.url), isCustom: true }));
+  }, [doc]);
+
+  /* ── All links combined for vCard ── */
+  const allLinks = useMemo(() => [...platformLinks, ...customLinks], [platformLinks, customLinks]);
 
   const colors = (key) => {
     const brand = PLATFORMS.find(p=>p.key===key)?.brand || th.btnBg;
@@ -478,7 +370,7 @@ export default function PublicProfile() {
   };
 
   const saveVCard = () => {
-    const blob = new Blob([buildVCard(th, links)], { type: "text/vcard;charset=utf-8" });
+    const blob = new Blob([buildVCard(th, allLinks)], { type: "text/vcard;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = `${(th.contactFullName||th.title||"contacto").replace(/\s+/g,"_")}.vcf`;
@@ -489,18 +381,17 @@ export default function PublicProfile() {
   if (err)     return <Center><Err>❌ {err}</Err></Center>;
   if (!doc)    return <Center><Err>Sin datos</Err></Center>;
 
+  const radius     = th.btnPill ? 999 : th.btnRadius;
+  const centerBtnW = th.btnAlign === "center";
+
   return (
     <>
       <GlobalStyle />
       <Page
-        $color={th.textColor}
-        $fontFamily={font}
-        $fontSize={th.fontSize}
+        $color={th.textColor} $fontFamily={font} $fontSize={th.fontSize}
         $bgImage={th.bgMode === "image" ? th.bgImageUrl : ""}
         $overlayCss={th.bgMode === "image" ? overlay : ""}
-        $bgPosX={th.bgPosX}
-        $bgPosY={th.bgPosY}
-        $bgZoom={th.bgZoom}
+        $bgPosX={th.bgPosX} $bgPosY={th.bgPosY} $bgZoom={th.bgZoom}
         $bgCss={th.bgMode !== "image" ? bg : undefined}
       >
         <Col $pad={th.containerPadding} $offset={th.heroOffset} $gap={th.linksGap}>
@@ -516,17 +407,17 @@ export default function PublicProfile() {
             {th.description?.trim() && <p>{th.description.trim()}</p>}
           </Bio>
 
-          {links.map(l => {
+          {/* ── Platform links ── */}
+          {platformLinks.map(l => {
             const { bg: lbg, border, text } = colors(l.key);
-            const Icon   = Icons[l.key] || Icons.custom;
-            const radius = th.btnPill ? 999 : th.btnRadius;
-            const bc     = th.btnVariant === "outline" ? border : th.btnUseBrand ? border : "transparent";
-            const btnBg  = th.btnVariant === "filled"  ? lbg
-                         : th.btnVariant === "glass"   ? "rgba(255,255,255,.18)"
-                         : "transparent";
+            const Icon  = Icons[l.key] || Icons.custom;
+            const bc    = th.btnVariant === "outline" ? border : th.btnUseBrand ? border : "transparent";
+            const btnBg = th.btnVariant === "filled"  ? lbg
+                        : th.btnVariant === "glass"   ? "rgba(255,255,255,.18)"
+                        : "transparent";
             return (
-              <BtnRow key={`${l.key}-${l.order??""}`} $center={th.btnAlign === "center"}>
-                <div style={{ width: th.btnAlign === "center" ? `${th.btnWidth}%` : "100%", minWidth: 0 }}>
+              <BtnRow key={`${l.key}-${l.order??""}`} $center={centerBtnW}>
+                <div style={{ width: centerBtnW ? `${th.btnWidth}%` : "100%", minWidth: 0 }}>
                   <SocialBtn
                     href={l.href} target="_blank" rel="noreferrer"
                     $r={radius} $bw={th.btnBorderWidth} $bc={bc} $bg={btnBg} $tc={text}
@@ -541,17 +432,42 @@ export default function PublicProfile() {
             );
           })}
 
+          {/* ── ✅ Custom links ── */}
+          {customLinks.map(l => {
+            const bc    = th.btnVariant === "outline" ? th.btnBorder : th.btnUseBrand ? "#7c3aed" : "transparent";
+            const btnBg = th.btnVariant === "filled"  ? (th.btnUseBrand ? "#7c3aed" : th.btnBg)
+                        : th.btnVariant === "glass"   ? "rgba(255,255,255,.18)"
+                        : "transparent";
+            return (
+              <BtnRow key={`custom-${l.id}`} $center={centerBtnW}>
+                <div style={{ width: centerBtnW ? `${th.btnWidth}%` : "100%", minWidth: 0 }}>
+                  <SocialBtn
+                    href={l.href} target="_blank" rel="noreferrer"
+                    $r={radius} $bw={th.btnBorderWidth} $bc={bc} $bg={btnBg} $tc={th.btnText}
+                    $blur={th.btnVariant === "glass"} $sh={th.btnShadow}
+                    $flip={th.btnIconSide === "right"} $ca={th.btnContentAlign}
+                  >
+                    <Icons.custom />
+                    <strong>{l.name || "Enlace"}</strong>
+                  </SocialBtn>
+                </div>
+              </BtnRow>
+            );
+          })}
+
+          {/* ── Widgets ── */}
           {th.widgets.map(w => {
             if (w.visible === false) return null;
-            if (w.type === "carousel") return null; // oculto temporalmente
+            if (w.type === "carousel") return <CarouselWidget key={w.id} w={w} />;
             if (w.type === "card")     return <CardWidget     key={w.id} w={w} />;
             if (w.type === "gallery")  return <GalleryWidget  key={w.id} w={w} tc={th.textColor} />;
             return null;
           })}
 
+          {/* ── vCard ── */}
           {(th.showVCard ?? true) && (
-            <BtnRow $center={th.btnAlign === "center"}>
-              <div style={{ width: th.btnAlign === "center" ? `${th.btnWidth}%` : "100%", minWidth: 0 }}>
+            <BtnRow $center={centerBtnW}>
+              <div style={{ width: centerBtnW ? `${th.btnWidth}%` : "100%", minWidth: 0 }}>
                 <VCardBtn onClick={saveVCard}>📇 Guardar contacto</VCardBtn>
               </div>
             </BtnRow>
