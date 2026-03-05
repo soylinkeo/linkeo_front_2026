@@ -182,7 +182,7 @@ export default function Step2() {
               <input type="checkbox" checked={values.remember} onChange={update("remember")} />
               Recordarme
             </Check>
-            <LinkA href="#" onClick={(e)=>e.preventDefault()}>¿Olvidaste tu contraseña?</LinkA>
+            {/* <LinkA href="#" onClick={(e)=>e.preventDefault()}>¿Olvidaste tu contraseña?</LinkA> */}
           </Row>
 
           {serverErr && <ErrorText style={{ marginTop: 6 }}>{serverErr}</ErrorText>}

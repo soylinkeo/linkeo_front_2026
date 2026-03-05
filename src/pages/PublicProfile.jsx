@@ -78,17 +78,20 @@ const blink  = keyframes`0%,100%{opacity:1}50%{opacity:.3}`;
 /* ── Global reset ── */
 const GlobalStyle = createGlobalStyle`
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { height: 100%; }
-  body { height: 100%; -webkit-font-smoothing: antialiased; }
-  #root { height: 100%; }
+  html, body, #root { height: 100%; -webkit-font-smoothing: antialiased; }
 `;
 
-/* =================== LAYOUT =================== */
-
-/* Full viewport page — bg is the profile bg itself */
+/*
+  Igual que ScreenContent en el editor:
+  position fijo ocupando todo el viewport, scroll interno.
+  El fondo se calcula sobre el viewport (no sobre el contenido),
+  así siempre cubre el 100% sin importar cuántos links haya.
+*/
 const Page = styled.div`
-  min-height: 100vh;
-  width: 100%;
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
   color: ${p => p.$color || "#fff"};
   font-family: ${p => p.$fontFamily};
   font-size: ${p => p.$fontSize}px;
@@ -493,12 +496,12 @@ export default function PublicProfile() {
         $color={th.textColor}
         $fontFamily={font}
         $fontSize={th.fontSize}
-        $bgCss={th.bgMode !== "image" ? bg : undefined}
         $bgImage={th.bgMode === "image" ? th.bgImageUrl : ""}
         $overlayCss={th.bgMode === "image" ? overlay : ""}
         $bgPosX={th.bgPosX}
         $bgPosY={th.bgPosY}
         $bgZoom={th.bgZoom}
+        $bgCss={th.bgMode !== "image" ? bg : undefined}
       >
         <Col $pad={th.containerPadding} $offset={th.heroOffset} $gap={th.linksGap}>
 

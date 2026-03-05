@@ -1451,11 +1451,12 @@ export default function Config() {
                 <Row>
                   <Label>Tipo de fondo:</Label>
                   <SegControl>
-                    {['solid','gradient','image'].map(m => (
-                      <button key={m} className={profile.bgMode === m ? 'active' : ''} onClick={() => P({ bgMode: m })}>
-                        {m === 'solid' ? '⬛ Sólido' : m === 'gradient' ? '🎨 Degradado' : '🖼 Imagen'}
-                      </button>
-                    ))}
+              {['solid','gradient','image'].map(m => (
+  m === 'image' ? null :
+  <button key={m} className={profile.bgMode === m ? 'active' : ''} onClick={() => P({ bgMode: m })}>
+    {m === 'solid' ? '⬛ Sólido' : '🎨 Degradado'}
+  </button>
+))}
                   </SegControl>
                 </Row>
 

@@ -351,17 +351,18 @@ export default function LandingLinkeo(){
           {/* Personal */}
           <Card>
             <img src={imgTarjeta} alt="Tarjeta Personal" />
-            <h4>Linkeo Personal</h4>
-            <p>Comparte un solo enlace de forma rápida y moderna. Ideal para creadores, freelancers e influencers.</p>
+            <h4>Plan 1 Enlace</h4>
+            <p>  Ideal si solo quieres llevar a un solo destino: WhatsApp, Instagram, tu web o portafolio.
+        Te lo dejamos listo y funcionando.</p>
             <Ratings>
               <span><i className="ri-nfc-fill" /></span>
               <span><i className="ri-user-fill" /></span>
               <span><i className="ri-smartphone-line" /></span>
             </Ratings>
             <PriceRow>
-              <p className="price">Desde S/ 39.90</p>
+              <p className="price">Desde S/ 59.90</p>
               <a
-                href="https://wa.me/51987095046?text=Hola%2C%20quiero%20m%C3%A1s%20informaci%C3%B3n%20sobre%20la%20tarjeta%20Linkeo%20Personal"
+          href="https://wa.me/51987095046?text=Hola%2C%20quiero%20el%20Plan%201%20Enlace%20(Linkeo)%3A%20deseo%20enlazar%20mi%20tarjeta%20a%20un%20solo%20link."
                 target="_blank" rel="noreferrer">
                 <Btn className="btn">Más info</Btn>
               </a>
@@ -371,17 +372,18 @@ export default function LandingLinkeo(){
           {/* Empresarial */}
           <Card>
             <img src={imgTarjeta} alt="Tarjeta Empresarial" />
-            <h4>Linkeo Empresarial</h4>
-            <p>Gestiona múltiples tarjetas para tu equipo con acceso a catálogo, WhatsApp Business y redes.</p>
+            <h4>Plan Personalizado</h4>
+            <p> Tarjeta + sistema personalizado para ti (diseño y configuración completa). Pago único.
+        Ideal si quieres tu perfil listo y personalizado sin costos mensuales adicionales.</p>
             <Ratings>
               <span><i className="ri-building-line" /></span>
               <span><i className="ri-briefcase-line" /></span>
               <span><i className="ri-share-line" /></span>
             </Ratings>
             <PriceRow>
-              <p className="price">Desde S/ 59.90</p>
+              <p className="price">S/ 79.90 (pago único)</p>
               <a
-                href="https://wa.me/51987095046?text=Hola%2C%20quiero%20m%C3%A1s%20informaci%C3%B3n%20sobre%20la%20tarjeta%20Linkeo%20Empresarial"
+        href="https://wa.me/51987095046?text=Hola%2C%20quiero%20el%20Plan%20Personalizado%20(Linkeo)%3A%20tarjeta%20%2B%20sistema%20personalizado%20con%20pago%20%C3%BAnico%20(S%2F%2079.90)%20sin%20mensualidad."
                 target="_blank" rel="noreferrer">
                 <Btn className="btn">Más info</Btn>
               </a>
@@ -391,17 +393,18 @@ export default function LandingLinkeo(){
           {/* Premium */}
           <Card>
             <img src={imgTarjeta} alt="Tarjeta Premium" />
-            <h4>Linkeo Premium</h4>
-            <p>Diseño exclusivo y perfil digital completo, editable en cualquier momento desde un solo lugar.</p>
+            <h4>Plan con Sistema</h4>
+            <p> Obtén tu URL Linkeo, enlaza todas tus redes y actualiza tus enlaces cuando quieras desde el sistema.
+        Incluye panel de edición y cambios ilimitados mientras esté activo.</p>
             <Ratings>
               <span><i className="ri-star-fill" /></span>
               <span><i className="ri-bar-chart-box-line" /></span>
               <span><i className="ri-global-line" /></span>
             </Ratings>
             <PriceRow>
-              <p className="price">Desde S/ 79.90</p>
+              <p className="price">Desde S/ 99.90 + S/ 10/mes</p>
               <a
-                href="https://wa.me/51987095046?text=Hola%2C%20quiero%20m%C3%A1s%20informaci%C3%B3n%20sobre%20la%20tarjeta%20Linkeo%20Premium"
+                 href="https://wa.me/51987095046?text=Hola%2C%20quiero%20el%20Plan%20con%20Sistema%20(Linkeo)%3A%20tarjeta%20%2B%20URL%20%2B%20panel%20para%20enlazar%20redes%20y%20actualizar%20mi%20perfil.%20Costo%20S%2F%2010%20mensual."
                 target="_blank" rel="noreferrer">
                 <Btn className="btn">Más info</Btn>
               </a>
@@ -422,9 +425,9 @@ export default function LandingLinkeo(){
             <h4>Productos</h4>
             <ul>
               <li><a href="#Tarjetas">Tarjetas NFC</a></li>
-              <li><a href="#">Linkeo Personal</a></li>
-              <li><a href="#">Linkeo Empresarial</a></li>
-              <li><a href="#">Linkeo Premium</a></li>
+              <li><a href="#">Plan 1 Enlace</a></li>
+              <li><a href="#">Plan Personalizado</a></li>
+              <li><a href="#">Plan con Sistema</a></li>
             </ul>
           </FooterCol>
 
@@ -432,8 +435,8 @@ export default function LandingLinkeo(){
             <h4>Enlaces Útiles</h4>
             <ul>
               <li><a href="#">¿Cómo funciona?</a></li>
-              <li><a href="#">Preguntas Frecuentes</a></li>
-              <li><a href="#">Soporte Técnico</a></li>
+              {/* <li><a href="#">Preguntas Frecuentes</a></li>
+              <li><a href="#">Soporte Técnico</a></li> */}
               <li><a href="https://wa.me/51987095046" target="_blank" rel="noreferrer">WhatsApp</a></li>
             </ul>
           </FooterCol>
@@ -441,10 +444,10 @@ export default function LandingLinkeo(){
           <FooterCol>
             <h4>Compañía</h4>
             <ul>
-              <li><a href="#">Nuestra Historia</a></li>
-              <li><a href="#">Política de Privacidad</a></li>
+              {/* <li><a href="#">Nuestra Historia</a></li>
+              <li><a href="#">Política de Privacidad</a></li> */}
               <li><a href="#">Términos y Condiciones</a></li>
-              <li><a href="#">Instagram</a></li>
+              {/* <li><a href="#">Instagram</a></li> */}
             </ul>
           </FooterCol>
         </FooterInner>
