@@ -337,7 +337,71 @@ const AvatarWrap = styled.div`
     box-shadow: 0 8px 24px rgba(0,0,0,0.3);
   }
 `;
+/* ── Avatar Shape System ── */
+const HeroBannerWrap = styled.div`
+  position: relative;
+  width: calc(100% + ${p => p.$pad * 2}px);
+  margin-left: -${p => p.$pad}px;
+  margin-right: -${p => p.$pad}px;
+  height: ${p => p.$height || 160}px;
+  overflow: hidden;
+  border-radius: ${p => p.$radius || 0}px;
+  flex-shrink: 0;
+  margin-top: -${p => p.$pad}px;
+`;
 
+const AvatarRectWrap = styled.div`
+  display: flex;
+  justify-content: ${p => p.$align === 'left' ? 'flex-start' : p.$align === 'right' ? 'flex-end' : 'center'};
+`;
+
+const AvatarRect = styled.div`
+  position: relative;
+  width: ${p => p.$size || 120}px;
+  height: ${p => p.$size || 120}px;
+  border-radius: ${p => p.$radius || 16}px;
+  overflow: hidden;
+  border: 3px solid rgba(255,255,255,0.25);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+`;
+
+const AvatarImgLayer = styled.div`
+  position: absolute;
+  inset: 0;
+  background-image: url(${p => p.$src});
+  background-size: ${p => p.$zoom || 100}%;
+  background-position: ${p => p.$x || 50}% ${p => p.$y || 50}%;
+  background-repeat: no-repeat;
+`;
+
+const HeroBannerGradient = styled.div`
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent 35%,
+    rgba(0,0,0,${p => p.$opacity || 0.6}) 100%
+  );
+  pointer-events: none;
+`;
+
+/* Editor preview */
+const BannerEditorPreview = styled.div`
+  position: relative;
+  width: 100%;
+  height: 150px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1.5px solid #e8e6e1;
+  background: #f1f5f9;
+`;
+
+const CircleEditorPreview = styled.div`
+  display: flex;
+  justify-content: center;
+  padding: 10px 0;
+`;
 const Heading = styled.div`
   text-align: ${p => p.$align};
   h2 { margin: 6px 0 4px; font-size: 22px; letter-spacing: -0.3px; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
@@ -1133,6 +1197,11 @@ const DEFAULT_PROFILE = {
   contactPostalCode: "", contactCountry: "", contactNote: "",
   showVCard: true,
   customLinks: [],
+  avatarShape: "circle",      // "circle" | "banner" | "rect"
+avatarPosX: 50, avatarPosY: 50, avatarZoom: 120,
+avatarHeight: 160, avatarRadius: 0,
+avatarGradientOpacity: 0.55,
+avatarRectSize: 110, avatarRectRadius: 16,
 };
 
 const FONTS = [
@@ -1552,41 +1621,152 @@ export default function Config() {
               <h3><StepNum>1</StepNum> Perfil — Avatar, nombre y descripción</h3>
               <ChevronIcon $open={openStep === 1}>⌄</ChevronIcon>
             </SectionHeader>
-            {openStep === 1 && (
-              <SectionBody>
-                <Row>
-                  <Label>Avatar:</Label>
-                  <label style={{ cursor: 'pointer' }}>
-                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && onAvatarFile(e.target.files[0])} />
-                    <Btn as="span">Subir imagen</Btn>
-                  </label>
-                  {profile.avatarDataUrl && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <img src={profile.avatarDataUrl} alt="avatar" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: '2px solid #e5e7eb' }} />
-                      <Btn as="span" style={{ fontSize: 12, padding: '5px 10px', color: '#dc2626' }} onClick={() => P({ avatarDataUrl: "" })}>Quitar</Btn>
-                    </div>
-                  )}
-                </Row>
-                <Row>
-                  <Label>Alineación avatar:</Label>
-                  <SegControl>
-                    {['left','center','right'].map(v => <button key={v} className={profile.avatarAlign === v ? 'active' : ''} onClick={() => P({ avatarAlign: v })}>{v === 'left' ? '←' : v === 'center' ? '↔' : '→'}</button>)}
-                  </SegControl>
-                </Row>
-                <TextInput placeholder="Tu nombre o marca" value={profile.title} onChange={e => P({ title: e.target.value })} />
-                <TextArea placeholder="Breve descripción…" value={profile.description} onChange={e => P({ description: e.target.value })} />
-                <Row>
-                  <Label>Alineación texto:</Label>
-                  <SegControl>
-                    {['left','center','right'].map(al => <button key={al} className={profile.align === al ? 'active' : ''} onClick={() => P({ align: al })}>{al === 'left' ? 'Izq.' : al === 'center' ? 'Centro' : 'Der.'}</button>)}
-                  </SegControl>
-                  <Label>Color de texto:</Label>
-                  <ColorSwatch $color={profile.textColor}>
-                    <input type="color" value={profile.textColor} onChange={e => P({ textColor: e.target.value })} />
-                  </ColorSwatch>
-                </Row>
-              </SectionBody>
-            )}
+        {openStep === 1 && (
+  <SectionBody>
+    {/* Shape selector */}
+    <Row>
+      <Label>Forma del avatar:</Label>
+      <SegControl>
+        <button className={profile.avatarShape === 'circle' ? 'active' : ''} onClick={() => P({ avatarShape: 'circle' })}>⬤ Círculo</button>
+        <button className={profile.avatarShape === 'banner' ? 'active' : ''} onClick={() => P({ avatarShape: 'banner' })}>🖼 Banner</button>
+        <button className={profile.avatarShape === 'rect' ? 'active' : ''} onClick={() => P({ avatarShape: 'rect' })}>▬ Tarjeta</button>
+      </SegControl>
+    </Row>
+
+    {/* Upload */}
+    <Row>
+      <Label>Imagen:</Label>
+      <label style={{ cursor: 'pointer' }}>
+        <input type="file" accept="image/*" style={{ display: 'none' }}
+          onChange={e => e.target.files?.[0] && onAvatarFile(e.target.files[0])} />
+        <Btn as="span">Subir imagen</Btn>
+      </label>
+      {profile.avatarDataUrl && (
+        <Btn as="span" style={{ fontSize: 12, padding: '5px 10px', color: '#dc2626', cursor: 'pointer' }}
+          onClick={() => P({ avatarDataUrl: "" })}>Quitar</Btn>
+      )}
+    </Row>
+
+    {/* Live editor preview + sliders */}
+    {profile.avatarDataUrl && (
+      <>
+        {/* Preview */}
+        {profile.avatarShape === 'banner' && (
+          <BannerEditorPreview>
+            <AvatarImgLayer $src={profile.avatarDataUrl} $zoom={profile.avatarZoom ?? 120} $x={profile.avatarPosX ?? 50} $y={profile.avatarPosY ?? 50} />
+            <HeroBannerGradient $opacity={profile.avatarGradientOpacity ?? 0.55} />
+          </BannerEditorPreview>
+        )}
+        {profile.avatarShape === 'circle' && (
+          <CircleEditorPreview>
+            <div style={{
+              position: 'relative', width: 100, height: 100, borderRadius: '50%',
+              overflow: 'hidden', border: '3px solid #e5e7eb', boxShadow: '0 4px 14px rgba(0,0,0,0.12)'
+            }}>
+              <AvatarImgLayer $src={profile.avatarDataUrl} $zoom={profile.avatarZoom ?? 120} $x={profile.avatarPosX ?? 50} $y={profile.avatarPosY ?? 50} />
+            </div>
+          </CircleEditorPreview>
+        )}
+        {profile.avatarShape === 'rect' && (
+          <CircleEditorPreview>
+            <div style={{
+              position: 'relative',
+              width: 120, height: 120,
+              borderRadius: `${profile.avatarRectRadius ?? 16}px`,
+              overflow: 'hidden', border: '3px solid #e5e7eb',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.12)'
+            }}>
+              <AvatarImgLayer $src={profile.avatarDataUrl} $zoom={profile.avatarZoom ?? 120} $x={profile.avatarPosX ?? 50} $y={profile.avatarPosY ?? 50} />
+            </div>
+          </CircleEditorPreview>
+        )}
+
+        {/* Sliders comunes */}
+        <SliderRow>
+          <span>Posición X</span>
+          <RangeInput type="range" min="0" max="100" value={profile.avatarPosX ?? 50} onChange={e => P({ avatarPosX: +e.target.value })} />
+          <SliderValue>{profile.avatarPosX ?? 50}%</SliderValue>
+        </SliderRow>
+        <SliderRow>
+          <span>Posición Y</span>
+          <RangeInput type="range" min="0" max="100" value={profile.avatarPosY ?? 50} onChange={e => P({ avatarPosY: +e.target.value })} />
+          <SliderValue>{profile.avatarPosY ?? 50}%</SliderValue>
+        </SliderRow>
+        <SliderRow>
+          <span>Zoom</span>
+          <RangeInput type="range" min="80" max="300" value={profile.avatarZoom ?? 120} onChange={e => P({ avatarZoom: +e.target.value })} />
+          <SliderValue>{profile.avatarZoom ?? 120}%</SliderValue>
+        </SliderRow>
+
+        {/* Sliders específicos por shape */}
+        {profile.avatarShape === 'banner' && (
+          <>
+            <SliderRow>
+              <span>Alto banner</span>
+              <RangeInput type="range" min="80" max="280" value={profile.avatarHeight ?? 160} onChange={e => P({ avatarHeight: +e.target.value })} />
+              <SliderValue>{profile.avatarHeight ?? 160}px</SliderValue>
+            </SliderRow>
+            <SliderRow>
+              <span>Degradado</span>
+              <RangeInput type="range" min="0" max="1" step="0.05" value={profile.avatarGradientOpacity ?? 0.55} onChange={e => P({ avatarGradientOpacity: +e.target.value })} />
+              <SliderValue>{Math.round((profile.avatarGradientOpacity ?? 0.55) * 100)}%</SliderValue>
+            </SliderRow>
+            <SliderRow>
+              <span>Bordes</span>
+              <RangeInput type="range" min="0" max="32" value={profile.avatarRadius ?? 0} onChange={e => P({ avatarRadius: +e.target.value })} />
+              <SliderValue>{profile.avatarRadius ?? 0}px</SliderValue>
+            </SliderRow>
+          </>
+        )}
+        {(profile.avatarShape === 'rect') && (
+          <>
+            <SliderRow>
+              <span>Tamaño</span>
+              <RangeInput type="range" min="60" max="200" value={profile.avatarRectSize ?? 110} onChange={e => P({ avatarRectSize: +e.target.value })} />
+              <SliderValue>{profile.avatarRectSize ?? 110}px</SliderValue>
+            </SliderRow>
+            <SliderRow>
+              <span>Bordes</span>
+              <RangeInput type="range" min="0" max="60" value={profile.avatarRectRadius ?? 16} onChange={e => P({ avatarRectRadius: +e.target.value })} />
+              <SliderValue>{profile.avatarRectRadius ?? 16}px</SliderValue>
+            </SliderRow>
+          </>
+        )}
+      </>
+    )}
+
+    {/* Alineación — solo para circle y rect */}
+    {profile.avatarShape !== 'banner' && (
+      <Row>
+        <Label>Alineación avatar:</Label>
+        <SegControl>
+          {['left','center','right'].map(v => (
+            <button key={v} className={profile.avatarAlign === v ? 'active' : ''} onClick={() => P({ avatarAlign: v })}>
+              {v === 'left' ? '←' : v === 'center' ? '↔' : '→'}
+            </button>
+          ))}
+        </SegControl>
+      </Row>
+    )}
+
+    <TextInput placeholder="Tu nombre o marca" value={profile.title} onChange={e => P({ title: e.target.value })} />
+    <TextArea placeholder="Breve descripción…" value={profile.description} onChange={e => P({ description: e.target.value })} />
+    <Row>
+      <Label>Alineación texto:</Label>
+      <SegControl>
+        {['left','center','right'].map(al => (
+          <button key={al} className={profile.align === al ? 'active' : ''} onClick={() => P({ align: al })}>
+            {al === 'left' ? 'Izq.' : al === 'center' ? 'Centro' : 'Der.'}
+          </button>
+        ))}
+      </SegControl>
+      <Label>Color texto:</Label>
+      <ColorSwatch $color={profile.textColor}>
+        <input type="color" value={profile.textColor} onChange={e => P({ textColor: e.target.value })} />
+      </ColorSwatch>
+    </Row>
+  </SectionBody>
+)}
           </Section>
 
           {/* STEP 2: Fondo */}
@@ -1997,12 +2177,60 @@ export default function Config() {
                   $bgPosY={profile.bgPosY}
                   $bgZoom={profile.bgZoom}
                 >
-                  {profile.avatarDataUrl && (
-                    <AvatarWrap $align={profile.avatarAlign}>
-                      <img src={profile.avatarDataUrl} alt="Avatar" />
-                    </AvatarWrap>
-                  )}
+               {profile.avatarDataUrl && (() => {
+  const shape = profile.avatarShape || 'circle';
+  const pad = profile.containerPadding;
 
+  if (shape === 'banner') {
+    return (
+      <HeroBannerWrap $pad={pad} $height={profile.avatarHeight ?? 160} $radius={profile.avatarRadius ?? 0}>
+        <AvatarImgLayer
+          $src={profile.avatarDataUrl}
+          $zoom={profile.avatarZoom ?? 120}
+          $x={profile.avatarPosX ?? 50}
+          $y={profile.avatarPosY ?? 50}
+        />
+        <HeroBannerGradient $opacity={profile.avatarGradientOpacity ?? 0.55} />
+      </HeroBannerWrap>
+    );
+  }
+
+  if (shape === 'rect') {
+    const size = profile.avatarRectSize ?? 110;
+    return (
+      <AvatarRectWrap $align={profile.avatarAlign}>
+        <AvatarRect $size={size} $radius={profile.avatarRectRadius ?? 16}>
+          <AvatarImgLayer
+            $src={profile.avatarDataUrl}
+            $zoom={profile.avatarZoom ?? 120}
+            $x={profile.avatarPosX ?? 50}
+            $y={profile.avatarPosY ?? 50}
+          />
+        </AvatarRect>
+      </AvatarRectWrap>
+    );
+  }
+
+  // circle (default)
+  return (
+    <AvatarWrap $align={profile.avatarAlign}>
+      <div style={{
+        position: 'relative', width: 88, height: 88,
+        borderRadius: '50%', overflow: 'hidden',
+        border: '3px solid rgba(255,255,255,0.25)',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+        flexShrink: 0,
+      }}>
+        <AvatarImgLayer
+          $src={profile.avatarDataUrl}
+          $zoom={profile.avatarZoom ?? 120}
+          $x={profile.avatarPosX ?? 50}
+          $y={profile.avatarPosY ?? 50}
+        />
+      </div>
+    </AvatarWrap>
+  );
+})()}
                   <Heading $align={profile.align}>
                     <h2 style={{ opacity: profile.title ? 1 : 0.6, fontStyle: profile.title ? 'normal' : 'italic' }}>
                       {titleText}

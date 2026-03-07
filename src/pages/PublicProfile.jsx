@@ -105,7 +105,55 @@ const AvatarWrap = styled.div`
   justify-content: ${p => p.$a === "left" ? "flex-start" : p.$a === "right" ? "flex-end" : "center"};
   img { width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.25);box-shadow:0 8px 28px rgba(0,0,0,.35); }
 `;
+/* ── Avatar Shape System ── */
+const HeroBannerWrap = styled.div`
+  position: relative;
+  width: calc(100% + ${p => p.$pad * 2}px);
+  margin-left: -${p => p.$pad}px;
+  margin-right: -${p => p.$pad}px;
+  height: ${p => p.$height || 160}px;
+  overflow: hidden;
+  border-radius: ${p => p.$radius || 0}px;
+  flex-shrink: 0;
+  margin-top: -${p => p.$offset || 0}px;
+`;
 
+const AvatarImgLayer = styled.div`
+  position: absolute;
+  inset: 0;
+  background-image: url(${p => p.$src});
+  background-size: ${p => p.$zoom || 120}%;
+  background-position: ${p => p.$x || 50}% ${p => p.$y || 50}%;
+  background-repeat: no-repeat;
+`;
+
+const HeroBannerGradient = styled.div`
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent 35%,
+    rgba(0,0,0,${p => p.$opacity || 0.55}) 100%
+  );
+  pointer-events: none;
+`;
+
+const AvatarRectWrap = styled.div`
+  display: flex;
+  justify-content: ${p => p.$a === 'left' ? 'flex-start' : p.$a === 'right' ? 'flex-end' : 'center'};
+`;
+
+const AvatarRect = styled.div`
+  position: relative;
+  width: ${p => p.$size || 110}px;
+  height: ${p => p.$size || 110}px;
+  border-radius: ${p => p.$radius || 16}px;
+  overflow: hidden;
+  border: 3px solid rgba(255,255,255,0.25);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  flex-shrink: 0;
+`;
 const Bio = styled.div`
   text-align: ${p => p.$a};
   h2 { font-size:1.45em;font-weight:700;letter-spacing:-.3px;line-height:1.15;text-shadow:0 2px 10px rgba(0,0,0,.35);margin-bottom:6px; }
@@ -326,6 +374,15 @@ export default function PublicProfile() {
     contactNote:     t.contactNote      ?? "",
     showVCard:       t.showVCard        ?? true,
     widgets:         Array.isArray(t.widgets) ? t.widgets : [],
+    avatarShape:           t.avatarShape           ?? "circle",
+avatarPosX:            t.avatarPosX            ?? 50,
+avatarPosY:            t.avatarPosY            ?? 50,
+avatarZoom:            t.avatarZoom            ?? 120,
+avatarHeight:          t.avatarHeight          ?? 160,
+avatarRadius:          t.avatarRadius          ?? 0,
+avatarGradientOpacity: t.avatarGradientOpacity ?? 0.55,
+avatarRectSize:        t.avatarRectSize        ?? 110,
+avatarRectRadius:      t.avatarRectRadius      ?? 16,
   };
 
   useEffect(() => { loadFont(th.fontFamily); }, [th.fontFamily]);
@@ -396,11 +453,63 @@ export default function PublicProfile() {
       >
         <Col $pad={th.containerPadding} $offset={th.heroOffset} $gap={th.linksGap}>
 
-          {th.avatarUrl && (
-            <AvatarWrap $a={th.avatarAlign}>
-              <img src={th.avatarUrl} alt={th.title || "avatar"} />
-            </AvatarWrap>
-          )}
+     {th.avatarUrl && (() => {
+  const shape = th.avatarShape || "circle";
+
+  if (shape === "banner") {
+    return (
+      <HeroBannerWrap
+        $pad={th.containerPadding}
+        $height={th.avatarHeight}
+        $radius={th.avatarRadius}
+        $offset={th.heroOffset}
+      >
+        <AvatarImgLayer
+          $src={th.avatarUrl}
+          $zoom={th.avatarZoom}
+          $x={th.avatarPosX}
+          $y={th.avatarPosY}
+        />
+        <HeroBannerGradient $opacity={th.avatarGradientOpacity} />
+      </HeroBannerWrap>
+    );
+  }
+
+  if (shape === "rect") {
+    return (
+      <AvatarRectWrap $a={th.avatarAlign}>
+        <AvatarRect $size={th.avatarRectSize} $radius={th.avatarRectRadius}>
+          <AvatarImgLayer
+            $src={th.avatarUrl}
+            $zoom={th.avatarZoom}
+            $x={th.avatarPosX}
+            $y={th.avatarPosY}
+          />
+        </AvatarRect>
+      </AvatarRectWrap>
+    );
+  }
+
+  // circle — default
+  return (
+    <AvatarWrap $a={th.avatarAlign}>
+      <div style={{
+        position: "relative", width: 96, height: 96,
+        borderRadius: "50%", overflow: "hidden",
+        border: "3px solid rgba(255,255,255,0.25)",
+        boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
+        flexShrink: 0,
+      }}>
+        <AvatarImgLayer
+          $src={th.avatarUrl}
+          $zoom={th.avatarZoom}
+          $x={th.avatarPosX}
+          $y={th.avatarPosY}
+        />
+      </div>
+    </AvatarWrap>
+  );
+})()}
 
           <Bio $a={th.align}>
             <h2>{th.title?.trim() || "Tu nombre o marca"}</h2>
