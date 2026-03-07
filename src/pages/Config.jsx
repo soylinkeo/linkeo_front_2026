@@ -1592,7 +1592,7 @@ export default function Config() {
           {/* STEP 2: Fondo */}
           <Section>
             <SectionHeader onClick={() => setOpenStep(s => s === 2 ? 0 : 2)}>
-              <h3><StepNum>2</StepNum> Fondo — Color, degradado o imágenes</h3>
+              <h3><StepNum>2</StepNum> Fondo — Color o degradado </h3>
               <ChevronIcon $open={openStep === 2}>⌄</ChevronIcon>
             </SectionHeader>
             {openStep === 2 && (
@@ -1638,7 +1638,7 @@ export default function Config() {
                   </>
                 )}
 
-                {profile.bgMode === 'image' && (
+                {/* {profile.bgMode === 'image' && (
                   <ImageManagerWrap>
                     <Label>Imágenes de fondo ({bgImages.length}):</Label>
 
@@ -1717,7 +1717,7 @@ export default function Config() {
                       </BgPositionControl>
                     )}
                   </ImageManagerWrap>
-                )}
+                )} */}
               </SectionBody>
             )}
           </Section>
