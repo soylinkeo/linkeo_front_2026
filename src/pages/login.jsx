@@ -6,6 +6,12 @@ import { useAuth } from "../context/AuthContext";
 
 const GlobalStyle = createGlobalStyle`
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap');
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body, #root {
+    margin: 0; padding: 0;
+    min-height: 100%;
+    background: #0a0a0a;
+  }
 `;
 
 /* ── Animations ── */
@@ -29,48 +35,78 @@ const pulse = keyframes`
 
 /* ── Page ── */
 const Page = styled.div`
+  width: 100%;
   min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
   background: #0a0a0a;
   font-family: "Poppins", system-ui, sans-serif;
   position: relative;
   overflow: hidden;
 
+  /* orb top-left */
   &::before {
     content: "";
-    position: absolute;
+    position: fixed;
     width: 600px; height: 600px;
     border-radius: 50%;
-    top: -180px; left: -160px;
-    background: radial-gradient(circle, rgba(255,255,255,.18) 0%, transparent 70%);
+    top: -200px; left: -180px;
+    background: radial-gradient(circle, rgba(255,255,255,.22) 0%, rgba(255,255,255,.06) 45%, transparent 70%);
     animation: ${rotateBg} 18s linear infinite;
     pointer-events: none;
+    z-index: 0;
   }
 
+  /* orb bottom-right */
   &::after {
     content: "";
-    position: absolute;
+    position: fixed;
     width: 500px; height: 500px;
     border-radius: 50%;
-    bottom: -140px; right: -120px;
-    background: radial-gradient(circle, rgba(255,255,255,.12) 0%, transparent 70%);
+    bottom: -160px; right: -140px;
+    background: radial-gradient(circle, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 45%, transparent 70%);
     animation: ${rotateBg} 22s linear infinite reverse;
     pointer-events: none;
+    z-index: 0;
   }
 `;
 
+/* grid lines */
 const Grid = styled.div`
-  position: absolute;
+  position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+    linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
   background-size: 60px 60px;
   pointer-events: none;
   z-index: 0;
   animation: ${pulse} 6s ease-in-out infinite;
+`;
+
+/* white glow center-top */
+const TopGlow = styled.div`
+  position: fixed;
+  width: 700px; height: 260px;
+  top: -60px; left: 50%;
+  translate: -50% 0;
+  background: radial-gradient(ellipse, rgba(255,255,255,.14) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+`;
+
+/* white glow center-bottom */
+const BottomGlow = styled.div`
+  position: fixed;
+  width: 700px; height: 260px;
+  bottom: -60px; left: 50%;
+  translate: -50% 0;
+  background: radial-gradient(ellipse, rgba(255,255,255,.10) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
 `;
 
 /* ── Card ── */
@@ -79,22 +115,23 @@ const Card = styled.div`
   z-index: 10;
   width: 100%;
   max-width: 420px;
-  background: linear-gradient(145deg, #1a1a1a 0%, #0f0f0f 50%, #1c1c1c 100%);
-  border: 1px solid rgba(255,255,255,.10);
+  background: linear-gradient(145deg, #1c1c1c 0%, #0f0f0f 50%, #1a1a1a 100%);
+  border: 1px solid rgba(255,255,255,.12);
   border-radius: 28px;
   box-shadow:
     0 0 0 1px rgba(255,255,255,.04),
-    0 40px 80px rgba(0,0,0,.8),
-    inset 0 1px 0 rgba(255,255,255,.08);
-  padding: 44px 38px 36px;
+    0 40px 80px rgba(0,0,0,.9),
+    inset 0 1px 0 rgba(255,255,255,.10);
+  padding: 44px 32px 36px;
   animation: ${floatIn} .5s cubic-bezier(.22,1,.36,1) both;
 
+  /* top shine line */
   &::before {
     content: "";
     position: absolute;
     top: 0; left: 10%; right: 10%;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
     border-radius: 999px;
   }
 `;
@@ -121,7 +158,7 @@ const LogoText = styled.div`
 const TagLine = styled.p`
   margin: 0;
   font-size: 13px;
-  color: rgba(255,255,255,.4);
+  color: rgba(255,255,255,.45);
   letter-spacing: .3px;
 `;
 
@@ -135,14 +172,14 @@ const DividerLine = styled.div`
     content: "";
     flex: 1;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
   }
 
   span {
     font-size: 10px;
     font-weight: 700;
     letter-spacing: 2px;
-    color: rgba(255,255,255,.25);
+    color: rgba(255,255,255,.28);
     text-transform: uppercase;
   }
 `;
@@ -158,7 +195,7 @@ const Field = styled.label`
   gap: 7px;
   font-size: 11px;
   font-weight: 700;
-  color: rgba(255,255,255,.5);
+  color: rgba(255,255,255,.55);
   letter-spacing: 1px;
   text-transform: uppercase;
 `;
@@ -172,26 +209,27 @@ const Input = styled.input`
   height: 50px;
   padding: 10px 44px;
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.09);
-  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
   color: #fff;
   font-size: 14px;
   font-family: inherit;
   outline: none;
+  width: 100%;
   transition: border-color .2s, box-shadow .2s, background .2s;
 
-  &::placeholder { color: rgba(255,255,255,.2); }
+  &::placeholder { color: rgba(255,255,255,.22); }
   &:hover  {
-    border-color: rgba(255,255,255,.18);
-    background: rgba(255,255,255,.07);
+    border-color: rgba(255,255,255,.22);
+    background: rgba(255,255,255,.08);
   }
   &:focus  {
-    border-color: rgba(255,255,255,.45);
-    background: rgba(255,255,255,.09);
-    box-shadow: 0 0 0 3px rgba(255,255,255,.06), 0 0 20px rgba(255,255,255,.04);
+    border-color: rgba(255,255,255,.50);
+    background: rgba(255,255,255,.10);
+    box-shadow: 0 0 0 3px rgba(255,255,255,.07), 0 0 24px rgba(255,255,255,.05);
   }
   &[aria-invalid="true"] {
-    border-color: rgba(239,68,68,.6);
+    border-color: rgba(239,68,68,.65);
     box-shadow: 0 0 0 3px rgba(239,68,68,.12);
   }
 `;
@@ -238,7 +276,7 @@ const Check = styled.label`
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: rgba(255,255,255,.45);
+  color: rgba(255,255,255,.5);
   cursor: pointer;
 
   input {
@@ -266,6 +304,7 @@ const Submit = styled.button`
   margin-top: 6px;
   position: relative;
   overflow: hidden;
+  width: 100%;
 
   &::after {
     content: "";
@@ -284,10 +323,11 @@ const Submit = styled.button`
 
 const Secondary = styled.button`
   height: 50px;
-  border: 1px solid rgba(255,255,255,.15);
+  width: 100%;
+  border: 1px solid rgba(255,255,255,.14);
   border-radius: 14px;
   background: rgba(255,255,255,.04);
-  color: rgba(255,255,255,.8);
+  color: rgba(255,255,255,.75);
   font-weight: 700;
   font-size: 14px;
   font-family: inherit;
@@ -295,14 +335,14 @@ const Secondary = styled.button`
   cursor: pointer;
   transition: background .2s, border-color .2s, transform .05s;
 
-  &:hover  { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.25); }
+  &:hover  { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.24); }
   &:active { transform: translateY(1px); }
 `;
 
 const Footer = styled.p`
   margin: 20px 0 0;
   text-align: center;
-  color: rgba(255,255,255,.15);
+  color: rgba(255,255,255,.18);
   font-size: 10px;
   letter-spacing: 2.5px;
   font-weight: 700;
@@ -362,6 +402,8 @@ export default function Step2() {
     <Page>
       <GlobalStyle />
       <Grid />
+      <TopGlow />
+      <BottomGlow />
 
       <Card role="dialog" aria-labelledby="login-title">
         <Brand>
