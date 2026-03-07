@@ -434,6 +434,8 @@ const SectionBody = styled.div`
 /* ====== Controls ====== */
 const TextInput = styled.input`
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   padding: 11px 14px;
   border-radius: 12px;
   border: 1.5px solid #e8e6e1;
@@ -742,6 +744,8 @@ const LinkCardsGrid = styled.div`
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   align-items: start;
+  min-width: 0;
+  overflow: hidden;
   @media (max-width: 600px) { grid-template-columns: 1fr; }
 `;
 
@@ -750,6 +754,8 @@ const LinkCardsCol = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
+  overflow: hidden;
 `;
 
 const LinkCard = styled.div`
@@ -758,6 +764,7 @@ const LinkCard = styled.div`
   overflow: hidden;
   background: #fff;
   width: 100%;
+  min-width: 0;
 `;
 
 const LinkCardHeader = styled.button`
@@ -781,6 +788,8 @@ const LinkCardBody = styled.div`
   flex-direction: column;
   gap: 8px;
   border-top: 1.5px solid #f0ede8;
+  min-width: 0;
+  overflow: hidden;
 `;
 
 /* FIX: URL preview link shown above the input when a valid URL exists */
@@ -796,7 +805,9 @@ const UrlPreviewLink = styled.a`
   font-size: 11px;
   font-weight: 600;
   text-decoration: none;
-  word-break: break-all;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   line-height: 1.4;
   transition: background 0.15s;
   &:hover { background: #ede9fe; }

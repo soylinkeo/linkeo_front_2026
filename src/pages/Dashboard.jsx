@@ -444,8 +444,8 @@ export default function Dashboard() {
 
           <Footer>
             <div className="mini">
-              <span className="dot" />
-              <span>Linkeo • UI sobria blanco/negro</span>
+              {/* <span className="dot" /> */}
+              {/* <span>Linkeo • UI sobria blanco/negro</span> */}
             </div>
             <div>© {new Date().getFullYear()} Linkeo</div>
           </Footer>

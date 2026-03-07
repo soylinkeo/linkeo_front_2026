@@ -2,8 +2,6 @@
 import { Routes, Route } from "react-router-dom";
 import { createGlobalStyle } from "styled-components";
 import Config from "./pages/Config";
-import LinkSingle from "./pages/perro";
-import LinkMenu from "./pages/Menu2";
 import Login from "./pages/login";
 import Tarjeta from "./pages/tarjeta";
 import LandingPage from "./pages/land";
@@ -49,8 +47,6 @@ function App() {
               </RequireAuth>
             }
           />
-          <Route path="/step1" element={<LinkMenu />} />
-          <Route path="/step2" element={<LinkSingle />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 

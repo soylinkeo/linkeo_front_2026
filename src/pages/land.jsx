@@ -5,7 +5,6 @@ import styled, { createGlobalStyle } from "styled-components";
 import imagenHome from "../assets/imagen_home.png";
 import imgTarjeta from "../assets/img_tarjeta.png";
 
-/* ----------------------------- Global Styles ----------------------------- */
 const Global = createGlobalStyle`
   :root{
     --primary-color: #474747;
@@ -23,17 +22,20 @@ const Global = createGlobalStyle`
   a{ text-decoration: none; }
 `;
 
-/* --------------------------------- Layout -------------------------------- */
 const Page = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
 `;
 
-/* --------------------------------- Navbar -------------------------------- */
+/* ── Navbar ── */
 const Nav = styled.nav`
-  position: sticky; top: 0; z-index: 20;
-  background: #000; color: var(--white);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  position: relative;   /* permite que el dropdown absoluto se posicione desde acá */
+  background: #000;
+  color: var(--white);
   @media (min-width: 768px){
     background: transparent; color: var(--text-dark);
   }
@@ -42,55 +44,93 @@ const Nav = styled.nav`
 const NavInner = styled.div`
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 1rem;
-  display: grid;
-  grid-template-columns: 1fr auto auto;
+  padding: .75rem 1rem;
+  display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: .75rem;
+
+  /* Logo a la izquierda, el resto a la derecha */
+  .nav-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
 
   @media (min-width: 768px){
-    grid-template-columns: auto 1fr auto;
     padding: 2rem 1rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    .nav-right { margin-left: 0; }
   }
 `;
 
 const Logo = styled.a`
   font-size: 1.5rem; font-weight: 700; color: var(--primary-color);
-  span{ color: ${p => (p.$dark ? "var(--text-dark)" : "var(--white)")}; }
-  @media (min-width: 768px){ span{ color: var(--text-dark);} }
+  flex-shrink: 0;
+  span{ color: var(--white); }
+  @media (min-width: 768px){ span{ color: var(--text-dark); } }
 `;
 
+/* Login siempre visible — esquina derecha en móvil */
+const LoginBtn = styled.button`
+  flex-shrink: 0;
+  padding: .5rem 1.1rem;
+  border: 2px solid rgba(255,255,255,.7);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--white);
+  font-weight: 700;
+  font-size: .9rem;
+  cursor: pointer;
+  transition: background .2s;
+  &:hover{ background: rgba(255,255,255,.15); }
+
+  @media (min-width: 768px){
+    border-color: var(--text-dark);
+    color: var(--text-dark);
+    &:hover{ background: rgba(0,0,0,.06); }
+  }
+`;
+
+/* Hamburguesa — solo en móvil, blanca */
 const MenuBtn = styled.button`
-  justify-self: end;
-  border: 0; background: transparent; color: inherit;
-  font-size: 1.6rem; cursor: pointer;
+  border: 0; background: transparent;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+  font-size: 1.8rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  i { color: #fff !important; }
   @media (min-width: 768px){ display: none; }
 `;
 
+/* Links desplegables */
 const Links = styled.ul`
-  grid-column: 1 / -1;
-  list-style: none; margin: 0; padding: 0;
-  display: flex; flex-direction: column; align-items: center; gap: 2rem;
-  background: var(--primary-color-light);
+  /* En móvil: cae como drawer debajo del navbar */
+  position: absolute;
+  top: 100%;
+  left: 0; right: 0;
+  list-style: none; margin: 0; padding: 1.5rem 1rem;
+  display: flex; flex-direction: column; align-items: center; gap: 1.5rem;
+  background: #111;
   transform: translateY(${p => (p.$open ? "0%" : "-120%")});
-  transition: transform .4s ease;
-  padding: 2rem;
-  a{ color: var(--primary-color); font-weight: 600; }
-  a:hover{ color: var(--text-dark); }
+  opacity: ${p => (p.$open ? 1 : 0)};
+  pointer-events: ${p => (p.$open ? "auto" : "none")};
+  transition: transform .35s ease, opacity .25s ease;
+  z-index: 10;
+  a{ color: rgba(255,255,255,.85); font-weight: 600; font-size: 1rem; }
+  a:hover{ color: var(--white); }
 
   @media (min-width: 768px){
-    position: static; transform: none; background: transparent; padding: 0;
-    grid-column: auto; flex-direction: row; gap: 1.5rem; justify-self: center;
+    position: static; transform: none; opacity: 1; pointer-events: auto;
+    background: transparent; padding: 0;
+    flex-direction: row; gap: 1.5rem; justify-self: center;
     a{ color: var(--text-dark); }
     a:hover{ color: var(--primary-color); }
   }
 `;
 
-const CtaWrap = styled.div`
-  justify-self: end;
-  a .btn{ padding: 8px 10px; border-radius: 999px; font-size: 1.4rem; }
-`;
-
+/* ── Buttons ── */
 const Btn = styled.button`
   padding: .75rem 1.5rem; border: 0; border-radius: 10px;
   background: var(--primary-color); color: var(--white); cursor: pointer; font-weight: 600;
@@ -98,18 +138,8 @@ const Btn = styled.button`
   display: inline-flex; align-items: center; gap: .5rem;
   &:hover{ background: var(--primary-color-dark); }
 `;
-const LoginBtn = styled(Btn)`
-  background: transparent;
-  border: 2px solid currentColor;
-  color: inherit;
-  &:hover{ background: rgba(255,255,255,.12); }
 
-  @media (min-width: 768px){
-    color: var(--text-dark);
-    &:hover{ background: rgba(0,0,0,.06); }
-  }
-`;
-/* --------------------------------- Sections ------------------------------- */
+/* ── Sections ── */
 const Section = styled.section`
   max-width: var(--max-width); margin: 0 auto; padding: 5rem 1rem;
 `;
@@ -172,9 +202,7 @@ const BannerIcon = styled.span`
   font-size: 2rem; color: var(--white); border-radius: 1rem; background: #000; box-shadow: 5px 5px 30px #595959;
 `;
 
-const Special = styled(Section)`
-  text-align: center;
-`;
+const Special = styled(Section)`text-align: center;`;
 
 const SpecialGrid = styled.div`
   margin-top: 2.5rem; display: grid; gap: 1rem;
@@ -191,18 +219,14 @@ const Card = styled.div`
   p{ color: var(--text-light); line-height: 1.75rem; margin: 0 0 .75rem; }
 `;
 
-const Ratings = styled.div`
-  margin-bottom: 1rem; color: goldenrod; font-size: 1rem;
-`;
+const Ratings = styled.div`margin-bottom: 1rem; color: goldenrod; font-size: 1rem;`;
 
 const PriceRow = styled.div`
   display: flex; gap: 10px; align-items: center; justify-content: center;
   .price{ font-size: 1.1rem; font-weight: 700; color: var(--text-dark); }
 `;
 
-const Footer = styled.footer`
-  background: var(--primary-color-light);
-`;
+const Footer = styled.footer`background: var(--primary-color-light);`;
 
 const FooterInner = styled(Section)`
   display: grid; gap: 2rem;
@@ -218,71 +242,48 @@ const FooterCol = styled.div`
   a:hover{ color: var(--primary-color); }
 `;
 
-const FooterBar = styled.div`
-  padding: 1rem; text-align: center; color: var(--text-light);
-`;
+const FooterBar = styled.div`padding: 1rem; text-align: center; color: var(--text-light);`;
 
-/* ------------------------------ Landing View ------------------------------ */
+/* ═══════════════════════════════════════════════════ */
 export default function LandingLinkeo(){
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+
   return (
     <Page>
       <Global />
 
-      {/* NAVBAR */}
-      <Nav>
+      <Nav style={{ position: "sticky" }}>
         <NavInner>
+          {/* Logo — izquierda */}
           <Logo href="#home">LINKEO<span> </span></Logo>
 
-          <MenuBtn aria-label="Menú" onClick={() => setOpen(v => !v)}>
-            <i className={open ? "ri-close-line" : "ri-menu-line"} />
-          </MenuBtn>
-
+          {/* Links — desktop center */}
           <Links $open={open} onClick={() => setOpen(false)}>
             <li><a href="#home">Inicio</a></li>
             <li><a href="#NFC">Tecnología NFC</a></li>
             <li><a href="#Tarjetas">Tarjetas</a></li>
-            
           </Links>
-          
-  <CtaWrap>
-  <LoginBtn
-    type="button"
-    className="btn"
-    onClick={() => navigate("/login")}
-    aria-label="Login"
-  >
-    Login
-  </LoginBtn>
 
-  {/* <a
-    href="https://wa.me/51987095046?text=Hola%2C%20deseo%20saber%20m%C3%A1s%20informaci%C3%B3n%20sobre%20las%20tarjetas%20NFC%20de%20Linkeo"
-    target="_blank"
-    rel="noreferrer"
-  >
-    <Btn className="btn" aria-label="WhatsApp">
-      <i className="ri-whatsapp-line" />
-    </Btn>
-  </a> */}
-</CtaWrap>
+          {/* Derecha: login + hamburguesa */}
+          <div className="nav-right">
+            <LoginBtn onClick={() => navigate("/login")}>Login</LoginBtn>
+            <MenuBtn aria-label="Menú" onClick={() => setOpen(v => !v)}>
+              {open ? "✕" : "☰"}
+            </MenuBtn>
+          </div>
         </NavInner>
       </Nav>
 
       {/* HERO */}
       <HeaderContainer id="home">
-        <div>
-          <img src={imagenHome} alt="Tarjeta NFC Linkeo" />
-        </div>
+        <div><img src={imagenHome} alt="Tarjeta NFC Linkeo" /></div>
         <div>
           <H1>Conecta con <span>un solo toque</span>.</H1>
-          <P>
-            Con Linkeo, comparte tu perfil, redes sociales o negocio con una tarjeta NFC moderna y personal.
-            Tu identidad digital, ahora al alcance de un tap.
-          </P>
+          <P>Con Linkeo, comparte tu perfil, redes sociales o negocio con una tarjeta NFC moderna y personal. Tu identidad digital, ahora al alcance de un tap.</P>
           <Center>
             <a href="https://wa.me/51987095046?text=Hola%2C%20deseo%20solicitar%20informaci%C3%B3n%20sobre%20las%20tarjetas%20NFC%20de%20Linkeo" target="_blank" rel="noreferrer">
-              <Btn className="btn"><i className="ri-whatsapp-line" /> Solicitar información</Btn>
+              <Btn><i className="ri-whatsapp-line" /> Solicitar información</Btn>
             </a>
           </Center>
         </div>
@@ -290,18 +291,12 @@ export default function LandingLinkeo(){
 
       {/* NFC */}
       <Explore id="NFC">
-        <div>
-          <img src={imgTarjeta} alt="Tarjeta NFC Linkeo" />
-        </div>
+        <div><img src={imgTarjeta} alt="Tarjeta NFC Linkeo" /></div>
         <div>
           <H2>Tarjeta NFC Inteligente</H2>
-          <P>
-            Conecta tu mundo digital con un solo toque. Nuestra tarjeta NFC inteligente te permite compartir tu perfil,
-            redes sociales, contacto, portafolio o cualquier enlace personalizado sin apps ni complicaciones.
-            Compatible con todos los dispositivos modernos.
-          </P>
+          <P>Conecta tu mundo digital con un solo toque. Nuestra tarjeta NFC inteligente te permite compartir tu perfil, redes sociales, contacto, portafolio o cualquier enlace personalizado sin apps ni complicaciones. Compatible con todos los dispositivos modernos.</P>
           <Center>
-            <a href="#Tarjetas"><Btn className="btn">Conoce Más <span><i className="ri-arrow-right-line" /></span></Btn></a>
+            <a href="#Tarjetas"><Btn>Conoce Más <i className="ri-arrow-right-line" /></Btn></a>
           </Center>
         </div>
       </Explore>
@@ -325,88 +320,56 @@ export default function LandingLinkeo(){
         </BannerCard>
       </BannerGrid>
 
-      {/* CTA EXPLORA */}
+      {/* CTA */}
       <Explore>
         <div>
           <H2>¿Listo para conectar de verdad?</H2>
-          <P>
-            El mundo se mueve con un solo toque. Haz que cada encuentro sea una oportunidad con <strong>Linkeo</strong>.<br/>
-            Elige la tarjeta que mejor se adapte a ti y da el siguiente paso hacia tu identidad digital.
-          </P>
+          <P>El mundo se mueve con un solo toque. Haz que cada encuentro sea una oportunidad con <strong>Linkeo</strong>.<br/>Elige la tarjeta que mejor se adapte a ti y da el siguiente paso hacia tu identidad digital.</P>
           <Center>
-            <a href="#Tarjetas"><Btn className="btn">Conoce Más <span><i className="ri-arrow-right-line" /></span></Btn></a>
+            <a href="#Tarjetas"><Btn>Conoce Más <i className="ri-arrow-right-line" /></Btn></a>
           </Center>
         </div>
-        <div>
-          <img src={imgTarjeta} alt="Tarjeta NFC Linkeo" />
-        </div>
+        <div><img src={imgTarjeta} alt="Tarjeta NFC Linkeo" /></div>
       </Explore>
 
       {/* TARJETAS */}
       <Special id="Tarjetas">
         <H2>Nuestras Tarjetas NFC</H2>
         <P>Elige el tipo de tarjeta que se adapta a tu estilo y necesidad. Todas con tecnología NFC para compartir tu identidad digital con un solo toque.</P>
-
         <SpecialGrid>
-          {/* Personal */}
           <Card>
             <img src={imgTarjeta} alt="Tarjeta Personal" />
             <h4>Plan 1 Enlace</h4>
-            <p>  Ideal si solo quieres llevar a un solo destino: WhatsApp, Instagram, tu web o portafolio.
-        Te lo dejamos listo y funcionando.</p>
-            <Ratings>
-              <span><i className="ri-nfc-fill" /></span>
-              <span><i className="ri-user-fill" /></span>
-              <span><i className="ri-smartphone-line" /></span>
-            </Ratings>
+            <p>Ideal si solo quieres llevar a un solo destino: WhatsApp, Instagram, tu web o portafolio. Te lo dejamos listo y funcionando.</p>
+            <Ratings><i className="ri-nfc-fill" /> <i className="ri-user-fill" /> <i className="ri-smartphone-line" /></Ratings>
             <PriceRow>
               <p className="price">Desde S/ 59.90</p>
-              <a
-          href="https://wa.me/51987095046?text=Hola%2C%20quiero%20el%20Plan%201%20Enlace%20(Linkeo)%3A%20deseo%20enlazar%20mi%20tarjeta%20a%20un%20solo%20link."
-                target="_blank" rel="noreferrer">
-                <Btn className="btn">Más info</Btn>
+              <a href="https://wa.me/51987095046?text=Hola%2C%20quiero%20el%20Plan%201%20Enlace" target="_blank" rel="noreferrer">
+                <Btn>Más info</Btn>
               </a>
             </PriceRow>
           </Card>
-
-          {/* Empresarial */}
           <Card>
             <img src={imgTarjeta} alt="Tarjeta Empresarial" />
             <h4>Plan Personalizado</h4>
-            <p> Tarjeta + sistema personalizado para ti (diseño y configuración completa). Pago único.
-        Ideal si quieres tu perfil listo y personalizado sin costos mensuales adicionales.</p>
-            <Ratings>
-              <span><i className="ri-building-line" /></span>
-              <span><i className="ri-briefcase-line" /></span>
-              <span><i className="ri-share-line" /></span>
-            </Ratings>
+            <p>Tarjeta + sistema personalizado para ti (diseño y configuración completa). Pago único. Ideal si quieres tu perfil listo y personalizado sin costos mensuales adicionales.</p>
+            <Ratings><i className="ri-building-line" /> <i className="ri-briefcase-line" /> <i className="ri-share-line" /></Ratings>
             <PriceRow>
               <p className="price">S/ 79.90 (pago único)</p>
-              <a
-        href="https://wa.me/51987095046?text=Hola%2C%20quiero%20el%20Plan%20Personalizado%20(Linkeo)%3A%20tarjeta%20%2B%20sistema%20personalizado%20con%20pago%20%C3%BAnico%20(S%2F%2079.90)%20sin%20mensualidad."
-                target="_blank" rel="noreferrer">
-                <Btn className="btn">Más info</Btn>
+              <a href="https://wa.me/51987095046?text=Hola%2C%20quiero%20el%20Plan%20Personalizado" target="_blank" rel="noreferrer">
+                <Btn>Más info</Btn>
               </a>
             </PriceRow>
           </Card>
-
-          {/* Premium */}
           <Card>
             <img src={imgTarjeta} alt="Tarjeta Premium" />
             <h4>Plan con Sistema</h4>
-            <p> Obtén tu URL Linkeo, enlaza todas tus redes y actualiza tus enlaces cuando quieras desde el sistema.
-        Incluye panel de edición y cambios ilimitados mientras esté activo.</p>
-            <Ratings>
-              <span><i className="ri-star-fill" /></span>
-              <span><i className="ri-bar-chart-box-line" /></span>
-              <span><i className="ri-global-line" /></span>
-            </Ratings>
+            <p>Obtén tu URL Linkeo, enlaza todas tus redes y actualiza tus enlaces cuando quieras desde el sistema. Incluye panel de edición y cambios ilimitados mientras esté activo.</p>
+            <Ratings><i className="ri-star-fill" /> <i className="ri-bar-chart-box-line" /> <i className="ri-global-line" /></Ratings>
             <PriceRow>
               <p className="price">Desde S/ 99.90 + S/ 10/mes</p>
-              <a
-                 href="https://wa.me/51987095046?text=Hola%2C%20quiero%20el%20Plan%20con%20Sistema%20(Linkeo)%3A%20tarjeta%20%2B%20URL%20%2B%20panel%20para%20enlazar%20redes%20y%20actualizar%20mi%20perfil.%20Costo%20S%2F%2010%20mensual."
-                target="_blank" rel="noreferrer">
-                <Btn className="btn">Más info</Btn>
+              <a href="https://wa.me/51987095046?text=Hola%2C%20quiero%20el%20Plan%20con%20Sistema" target="_blank" rel="noreferrer">
+                <Btn>Más info</Btn>
               </a>
             </PriceRow>
           </Card>
@@ -420,7 +383,6 @@ export default function LandingLinkeo(){
             <Logo href="#">Link<span>eo</span></Logo>
             <p>Revoluciona tu forma de conectar. Con Linkeo, comparte tu identidad digital con una tarjeta NFC moderna, elegante y sin complicaciones.</p>
           </FooterCol>
-
           <FooterCol>
             <h4>Productos</h4>
             <ul>
@@ -430,24 +392,17 @@ export default function LandingLinkeo(){
               <li><a href="#">Plan con Sistema</a></li>
             </ul>
           </FooterCol>
-
           <FooterCol>
             <h4>Enlaces Útiles</h4>
             <ul>
               <li><a href="#">¿Cómo funciona?</a></li>
-              {/* <li><a href="#">Preguntas Frecuentes</a></li>
-              <li><a href="#">Soporte Técnico</a></li> */}
               <li><a href="https://wa.me/51987095046" target="_blank" rel="noreferrer">WhatsApp</a></li>
             </ul>
           </FooterCol>
-
           <FooterCol>
             <h4>Compañía</h4>
             <ul>
-              {/* <li><a href="#">Nuestra Historia</a></li>
-              <li><a href="#">Política de Privacidad</a></li> */}
               <li><a href="#">Términos y Condiciones</a></li>
-              {/* <li><a href="#">Instagram</a></li> */}
             </ul>
           </FooterCol>
         </FooterInner>
