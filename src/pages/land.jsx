@@ -244,6 +244,22 @@ const FooterCol = styled.div`
 
 const FooterBar = styled.div`padding: 1rem; text-align: center; color: var(--text-light);`;
 
+const OldPrice = styled.span`
+  font-size: .95rem;
+  color: var(--text-light);
+  text-decoration: line-through;
+  margin-right: 4px;
+`;
+
+const LaunchBadge = styled.span`
+  font-size: .7rem;
+  background: #db6e09;
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-weight: 700;
+  vertical-align: middle;
+`;
 /* ═══════════════════════════════════════════════════ */
 export default function LandingLinkeo(){
   const [open, setOpen] = useState(false);
@@ -342,36 +358,48 @@ export default function LandingLinkeo(){
             <h4>Plan 1 Enlace</h4>
             <p>Ideal si solo quieres llevar a un solo destino: WhatsApp, Instagram, tu web o portafolio. Te lo dejamos listo y funcionando.</p>
             <Ratings><i className="ri-nfc-fill" /> <i className="ri-user-fill" /> <i className="ri-smartphone-line" /></Ratings>
-            <PriceRow>
-              <p className="price">Desde S/ 59.90</p>
-              <a href="https://wa.me/51987095046?text=Hola%2C%20quiero%20el%20Plan%201%20Enlace" target="_blank" rel="noreferrer">
-                <Btn>Más info</Btn>
-              </a>
-            </PriceRow>
+        <PriceRow>
+  <div>
+    <LaunchBadge>Lanzamiento</LaunchBadge><br/>
+    <OldPrice>S/ 79.90</OldPrice>
+    <span className="price">S/ 59.90</span>
+  </div>
+  <a href="https://wa.me/51987095046?text=Hola%2C%20quiero%20el%20Plan%201%20Enlace" target="_blank" rel="noreferrer">
+    <Btn>Más info</Btn>
+  </a>
+</PriceRow>
           </Card>
           <Card>
             <img src={imgTarjeta} alt="Tarjeta Empresarial" />
             <h4>Plan Personalizado</h4>
             <p>Tarjeta + sistema personalizado para ti (diseño y configuración completa). Pago único. Ideal si quieres tu perfil listo y personalizado sin costos mensuales adicionales.</p>
             <Ratings><i className="ri-building-line" /> <i className="ri-briefcase-line" /> <i className="ri-share-line" /></Ratings>
-            <PriceRow>
-              <p className="price">S/ 79.90 (pago único)</p>
-              <a href="https://wa.me/51987095046?text=Hola%2C%20quiero%20el%20Plan%20Personalizado" target="_blank" rel="noreferrer">
-                <Btn>Más info</Btn>
-              </a>
-            </PriceRow>
+       <PriceRow>
+  <div>
+    <LaunchBadge>Lanzamiento</LaunchBadge><br/>
+    <OldPrice>S/ 99.90</OldPrice>
+    <span className="price">S/ 79.90 (pago único)</span>
+  </div>
+  <a href="https://wa.me/51987095046?text=Hola%2C%20quiero%20el%20Plan%20Personalizado" target="_blank" rel="noreferrer">
+    <Btn>Más info</Btn>
+  </a>
+</PriceRow>
           </Card>
           <Card>
             <img src={imgTarjeta} alt="Tarjeta Premium" />
             <h4>Plan con Sistema</h4>
             <p>Obtén tu URL Linkeo, enlaza todas tus redes y actualiza tus enlaces cuando quieras desde el sistema. Incluye panel de edición y cambios ilimitados mientras esté activo.</p>
             <Ratings><i className="ri-star-fill" /> <i className="ri-bar-chart-box-line" /> <i className="ri-global-line" /></Ratings>
-            <PriceRow>
-              <p className="price">Desde S/ 99.90 + S/ 10/mes</p>
-              <a href="https://wa.me/51987095046?text=Hola%2C%20quiero%20el%20Plan%20con%20Sistema" target="_blank" rel="noreferrer">
-                <Btn>Más info</Btn>
-              </a>
-            </PriceRow>
+          <PriceRow>
+  <div>
+    <LaunchBadge>Lanzamiento</LaunchBadge><br/>
+    <OldPrice>Desde S/ 119.90 + S/ 10/mes</OldPrice>
+    <span className="price">Desde S/ 99.90 + S/ 10/mes</span>
+  </div>
+  <a href="https://wa.me/51987095046?text=Hola%2C%20quiero%20el%20Plan%20con%20Sistema" target="_blank" rel="noreferrer">
+    <Btn>Más info</Btn>
+  </a>
+</PriceRow>
           </Card>
         </SpecialGrid>
       </Special>
