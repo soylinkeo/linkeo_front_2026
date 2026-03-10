@@ -11,10 +11,10 @@ async function trackEvent(slug, type, linkKey = "") {
     await fetch(TRACK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-     body: JSON.stringify({ slug, type, linkKey, linkName }),
+      body: JSON.stringify({ slug, type, linkKey }),
     });
   } catch {
-    // silencioso — nunca romper la UX
+    // silencioso
   }
 }
 
