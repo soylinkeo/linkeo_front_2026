@@ -6,18 +6,16 @@ import { API } from "../lib/api";
 
 const TRACK_URL = "https://linkeobackend2026-production.up.railway.app/api/analytics/track";
 
-async function trackEvent(slug, type, linkKey = "") {
+// Cambia trackEvent a:
+async function trackEvent(slug, type, linkKey = "", linkName = "") {
   try {
     await fetch(TRACK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug, type, linkKey }),
+      body: JSON.stringify({ slug, type, linkKey, linkName }),
     });
-  } catch {
-    // silencioso
-  }
+  } catch {}
 }
-
 /* ================= ICONOS ================= */
 const Icons = {
   whatsapp: (p) => (<svg viewBox="0 0 24 24" width="18" height="18" {...p}><path fill="currentColor" d="M20.5 3.5A11 11 0 0 0 2.1 17.3L1 23l5.9-1.6A11 11 0 1 0 20.5 3.5Zm-8.9 16.4c-1.8 0-3.4-.5-4.8-1.5l-.3-.2-3.5.9.9-3.4-.2-.3a8.9 8.9 0 1 1 7.9 4.5Zm4.9-6.7c-.3-.2-1.6-.8-1.9-.9-.3-.1-.5-.2-.7.2-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-1.6-.8-2.7-1.5-3.8-3.4-.3-.5.3-.5.8-1.7.1-.2.1-.4 0-.6-.1-.2-.7-1.7-.9-2.3-.2-.5-.4-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.9.9-1.3 2.1-1.3 3.3 0 .4.1.8.2 1.1.3 1 .9 1.9 1.1 2.2.2.3 2.1 3.2 5.1 4.5 3 .1 3.6.1 5.8-2.1.3-.4.4-.8.3-1-.2-.1-.5-.2-.9-.4Z"/></svg>),
@@ -518,7 +516,7 @@ export default function PublicProfile() {
                 <BtnRow key={`custom-${l.id}`} $center={centerBtnW}>
                   <div style={{ width: centerBtnW ? `${th.btnWidth}%` : "100%", minWidth: 0 }}>
                     <SocialBtn href={l.href} target="_blank" rel="noreferrer"
-                 onClick={() => trackEvent(slug, "link_click", `custom_${l.id}`)}
+            onClick={() => trackEvent(slug, "link_click", `custom_${l.id}`, l.name || "Enlace")}
                       $r={radius} $bw={th.btnBorderWidth} $bc={bc} $bg={btnBg} $tc={th.btnText}
                       $blur={th.btnVariant === "glass"} $sh={th.btnShadow}
                       $flip={th.btnIconSide === "right"} $ca={th.btnContentAlign}>
