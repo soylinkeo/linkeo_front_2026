@@ -301,14 +301,10 @@ function GalleryWidget({ w, tc }) {
     </Gallery>
   );
 }
-function getTrackingKey(link, index = 0) {
-  if (!link) return `unknown_${index}`;
-
-  if (link.isCustom) {
-    return `custom_${link.id || index}`;
-  }
-
-  return link.id ? `${link.key}_${link.id}` : `${link.key}_${index}`;
+function getTrackingKey(link) {
+  if (!link) return "custom";
+  if (link.isCustom) return "custom";
+  return link.key || "custom";
 }
 async function trackEvent(slug, type, linkKey = "", linkName = "", linkUrl = "") {
   try {
