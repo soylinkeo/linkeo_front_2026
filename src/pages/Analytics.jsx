@@ -325,11 +325,17 @@ const load = useCallback(async (silent = false) => {
   const ctr = views > 0 ? ((totalClicks / views) * 100).toFixed(1) : "0.0";
 
   // clicks = { whatsapp: 5, instagram: 3 } → array ordenado
-  const clicksList = data?.clicks
-    ? Object.entries(data.clicks)
-        .map(([key, count]) => ({ key, count: Number(count) }))
-        .sort((a, b) => b.count - a.count)
-    : [];
+const clicksList = data?.clicks
+  ? Object.entries(data.clicks)
+      .map(([key, count]) => {
+        const isCustom = key.startsWith("custom_");
+        const brand = isCustom
+          ? { color: "#7c3aed", emoji: "🔗", label: key.replace("custom_", "Enlace ") }
+          : (BRAND[key] || BRAND.custom);
+        return { key, count: Number(count), brand };
+      })
+      .sort((a, b) => b.count - a.count)
+  : [];
 
   const maxCount = clicksList[0]?.count || 1;
 

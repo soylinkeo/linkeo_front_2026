@@ -11,7 +11,7 @@ async function trackEvent(slug, type, linkKey = "") {
     await fetch(TRACK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug, type, linkKey }),
+     body: JSON.stringify({ slug, type, linkKey, linkName }),
     });
   } catch {
     // silencioso — nunca romper la UX
@@ -518,7 +518,7 @@ export default function PublicProfile() {
                 <BtnRow key={`custom-${l.id}`} $center={centerBtnW}>
                   <div style={{ width: centerBtnW ? `${th.btnWidth}%` : "100%", minWidth: 0 }}>
                     <SocialBtn href={l.href} target="_blank" rel="noreferrer"
-                      onClick={() => trackEvent(slug, "link_click", "custom")}
+                 onClick={() => trackEvent(slug, "link_click", `custom_${l.id}`)}
                       $r={radius} $bw={th.btnBorderWidth} $bc={bc} $bg={btnBg} $tc={th.btnText}
                       $blur={th.btnVariant === "glass"} $sh={th.btnShadow}
                       $flip={th.btnIconSide === "right"} $ca={th.btnContentAlign}>
