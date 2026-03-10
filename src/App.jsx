@@ -10,6 +10,8 @@ import Dashboard from "./pages/Dashboard";
 import { AuthProvider } from "./context/AuthContext";
 import RequireAuth from "./components/RequireAuth";
 import PublicProfile from "./pages/PublicProfile";
+import SessionGuard from "./components/SessionGuard"; // 👈 1. Importar
+import Analytics from "./pages/Analytics";
 
 const GlobalStyles = createGlobalStyle`
   *, *::before, *::after { box-sizing: border-box; }
@@ -21,6 +23,7 @@ function App() {
     <>
       <GlobalStyles />
       <AuthProvider>
+        <SessionGuard /> {/* 👈 2. Agregar aquí, dentro de AuthProvider */}
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route
@@ -49,11 +52,17 @@ function App() {
           />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-
-          {/* 👇 pública por username */}
-        <Route path="/:slug" element={<PublicProfile />} />
-
-
+        <Route
+  path="/analytics"
+  element={
+    <RequireAuth>
+      <Analytics />
+    </RequireAuth>
+  }
+/>
+         <Route path="/:slug" element={<PublicProfile />} />
+ 
+          
         </Routes>
       </AuthProvider>
     </>

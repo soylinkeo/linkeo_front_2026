@@ -1,17 +1,10 @@
 // src/pages/Dashboard.jsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styled, { createGlobalStyle, keyframes } from "styled-components";
 import { useAuth } from "../context/AuthContext";
+import { authFetch } from "../lib/api";
 
-/**
- * Paleta sobria (inspiración Pantone / editorial):
- * - Negro profundo (tipo Pantone Black C): #0B0B0C
- * - Blanco: #FFFFFF
- * - Gris frío (tipo Cool Gray): #9CA3AF / #6B7280
- * - Superficies: #F7F7F8 / #EFEFF1
- * - Borde: #E5E7EB
- */
 const Global = createGlobalStyle`
   :root{
     --bg: #ffffff;
@@ -22,15 +15,11 @@ const Global = createGlobalStyle`
     --border: #e5e7eb;
     --card: #ffffff;
     --shadow: 0 18px 50px rgba(10, 10, 10, .08);
-
     --radius-xl: 28px;
     --radius-lg: 18px;
-
     --max: 1120px;
-
     --focus: rgba(17, 24, 39, .22);
   }
-
   *{ box-sizing: border-box; }
   html, body { scroll-behavior: smooth; }
   body{
@@ -80,7 +69,6 @@ const NavInner = styled.div`
   grid-template-columns: 1fr auto;
   gap: 12px;
   align-items: center;
-
   @media (min-width: 860px){
     grid-template-columns: auto 1fr auto;
   }
@@ -94,7 +82,6 @@ const Brand = styled(Link)`
   letter-spacing: .2px;
   color: var(--ink);
   font-size: 16px;
-
   .dot{
     width: 10px; height: 10px; border-radius: 999px;
     background: var(--ink);
@@ -110,7 +97,6 @@ const NavCenter = styled.div`
   display: none;
   justify-self: center;
   gap: 10px;
-
   @media (min-width: 860px){
     display: flex;
   }
@@ -125,13 +111,25 @@ const PillLink = styled(Link)`
   font-size: 13px;
   font-weight: 700;
   transition: transform .06s ease, background .15s ease, border-color .15s ease;
-
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   &:hover{
     background: var(--bg-soft);
     border-color: rgba(0,0,0,.14);
   }
   &:active{ transform: translateY(1px); }
   &:focus-visible{ outline: 3px solid var(--focus); outline-offset: 2px; }
+`;
+
+const PillLinkGreen = styled(PillLink)`
+  border-color: rgba(5,150,105,0.3);
+  color: #059669;
+  background: #f0fdf9;
+  &:hover{
+    background: #dcfce7;
+    border-color: rgba(5,150,105,0.5);
+  }
 `;
 
 const NavRight = styled.div`
@@ -153,7 +151,6 @@ const UserBadge = styled.div`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-
   b{ color: var(--ink); }
 `;
 
@@ -167,23 +164,14 @@ const Btn = styled.button`
   border-radius: 999px;
   cursor: pointer;
   transition: transform .06s ease, background .15s ease, box-shadow .15s ease;
-
   display: inline-flex;
   align-items: center;
   gap: 8px;
-
   &:hover{ background: #161617; box-shadow: 0 10px 24px rgba(0,0,0,.12); }
   &:active{ transform: translateY(1px); }
   &:focus-visible{ outline: 3px solid var(--focus); outline-offset: 2px; }
-
-  &.ghost{
-    background: var(--bg);
-    color: var(--ink);
-  }
-  &.ghost:hover{
-    background: var(--bg-soft);
-    box-shadow: none;
-  }
+  &.ghost{ background: var(--bg); color: var(--ink); }
+  &.ghost:hover{ background: var(--bg-soft); box-shadow: none; }
 `;
 
 const Main = styled.main`
@@ -194,7 +182,6 @@ const Hero = styled.section`
   padding: 26px 0 14px;
   display: grid;
   gap: 18px;
-
   @media (min-width: 900px){
     grid-template-columns: 1.2fr .8fr;
     align-items: center;
@@ -206,11 +193,7 @@ const HeroTitle = styled.h1`
   font-size: clamp(26px, 3.4vw, 44px);
   line-height: 1.08;
   letter-spacing: -0.6px;
-
-  span{
-    color: var(--muted);
-    font-weight: 800;
-  }
+  span{ color: var(--muted); font-weight: 800; }
 `;
 
 const HeroText = styled.p`
@@ -227,12 +210,7 @@ const HeroPanel = styled.div`
   border-radius: var(--radius-xl);
   padding: 16px;
   box-shadow: var(--shadow);
-
-  .kpi{
-    display: grid;
-    gap: 10px;
-  }
-
+  .kpi{ display: grid; gap: 10px; }
   .row{
     display: flex;
     align-items: center;
@@ -243,17 +221,9 @@ const HeroPanel = styled.div`
     background: rgba(255,255,255,.75);
     border: 1px solid rgba(0,0,0,.06);
   }
-
-  .label{
-    color: var(--muted);
-    font-size: 12px;
-    font-weight: 700;
-  }
-
-  .value{
-    font-weight: 900;
-    font-size: 13px;
-  }
+  .label{ color: var(--muted); font-size: 12px; font-weight: 700; }
+  .value{ font-weight: 900; font-size: 13px; }
+  .value-green{ font-weight: 900; font-size: 15px; color: #059669; }
 `;
 
 const Actions = styled.section`
@@ -261,7 +231,6 @@ const Actions = styled.section`
   display: grid;
   grid-template-columns: repeat(2, minmax(260px, 1fr));
   gap: 14px;
-
   @media (max-width: 780px){
     grid-template-columns: 1fr;
   }
@@ -276,26 +245,24 @@ const ActionCard = styled(Link)`
   grid-template-columns: 56px 1fr;
   gap: 14px;
   box-shadow: var(--shadow);
-
   transition: transform .08s ease, box-shadow .2s ease, border-color .2s ease;
-
   &:hover{
     transform: translateY(-2px);
     box-shadow: 0 26px 60px rgba(0,0,0,.10);
     border-color: rgba(0,0,0,.14);
   }
   &:focus-visible{ outline: 3px solid var(--focus); outline-offset: 3px; }
+  h3{ margin: 2px 0 6px; font-size: 15px; letter-spacing: -0.2px; }
+  p{ margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+`;
 
-  h3{
-    margin: 2px 0 6px;
-    font-size: 15px;
-    letter-spacing: -0.2px;
-  }
-  p{
-    margin: 0;
-    color: var(--muted);
-    font-size: 13px;
-    line-height: 1.5;
+const AnalyticsCard = styled(ActionCard)`
+  grid-column: 1 / -1;
+  border-color: rgba(5,150,105,0.2);
+  background: linear-gradient(135deg, #fff 0%, #f0fdf9 100%);
+  &:hover{
+    border-color: rgba(5,150,105,0.4);
+    box-shadow: 0 26px 60px rgba(5,150,105,.08);
   }
 `;
 
@@ -305,12 +272,15 @@ const Icon = styled.div`
   border-radius: 18px;
   display: grid;
   place-items: center;
-
   border: 1px solid rgba(0,0,0,.08);
   background: #0b0b0c;
   color: #fff;
-
   svg{ display:block; }
+`;
+
+const IconGreen = styled(Icon)`
+  background: linear-gradient(135deg, #059669, #34d399);
+  border-color: transparent;
 `;
 
 const Footer = styled.footer`
@@ -324,18 +294,11 @@ const Footer = styled.footer`
   justify-content: space-between;
   gap: 10px;
   flex-wrap: wrap;
-
-  .mini{
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .dot{
-    width: 6px; height: 6px; border-radius: 999px;
-    background: rgba(0,0,0,.25);
-  }
+  .mini{ display: inline-flex; align-items: center; gap: 8px; }
+  .dot{ width: 6px; height: 6px; border-radius: 999px; background: rgba(0,0,0,.25); }
 `;
 
+/* ── Icons ── */
 const CogIcon = (p) => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" {...p}>
     <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" strokeWidth="2"/>
@@ -351,11 +314,27 @@ const CardIcon = (p) => (
   </svg>
 );
 
+const ChartIcon = (p) => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" {...p}>
+    <path d="M3 3v18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M7 16l4-5 4 3 4-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+/* ════════════════════════════════════════════════════════════ */
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const nav = useNavigate();
+  const [quickStats, setQuickStats] = useState(null);
 
   const name = user?.username || user?.email || "usuario";
+
+  useEffect(() => {
+    authFetch("/api/analytics/me?days=7")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d && setQuickStats(d))
+      .catch(() => {});
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -376,14 +355,16 @@ export default function Dashboard() {
           <NavCenter>
             <PillLink to="/config">Configurar enlaces</PillLink>
             <PillLink to="/designCard">Diseñar tarjeta</PillLink>
+            <PillLinkGreen to="/analytics">
+              <ChartIcon width={13} height={13} />
+              Analytics
+            </PillLinkGreen>
           </NavCenter>
 
           <NavRight>
             <UserBadge title={name}>
               Hola, <b>{name}</b>
             </UserBadge>
-
-   
             <Btn onClick={handleLogout}>
               Cerrar sesión
             </Btn>
@@ -399,26 +380,28 @@ export default function Dashboard() {
                 Gestiona tu <span>identidad digital</span> en un solo lugar.
               </HeroTitle>
               <HeroText>
-                Ajusta tus enlaces, redes y botones; luego diseña tu tarjeta “Link-in-bio” para que tu NFC
+                Ajusta tus enlaces, redes y botones; luego diseña tu tarjeta "Link-in-bio" para que tu NFC
                 comparta exactamente lo que quieres, con un estilo limpio y profesional.
               </HeroText>
-
-          
             </div>
 
             <HeroPanel aria-label="Resumen rápido">
               <div className="kpi">
                 <div className="row">
                   <div className="label">Estado</div>
-                  <div className="value">Activo</div>
+                  <div className="value">✅ Activo</div>
                 </div>
                 <div className="row">
-                  <div className="label">Perfil</div>
-                  <div className="value">Listo para compartir</div>
+                  <div className="label">Visitas esta semana</div>
+                  <div className="value-green">
+                    {quickStats !== null ? quickStats.totalViews : "—"}
+                  </div>
                 </div>
                 <div className="row">
-                  <div className="label">Tip</div>
-                  <div className="value">Diseña primero tu tarjeta</div>
+                  <div className="label">Clicks esta semana</div>
+                  <div className="value-green">
+                    {quickStats !== null ? quickStats.totalClicks : "—"}
+                  </div>
                 </div>
               </div>
             </HeroPanel>
@@ -437,16 +420,28 @@ export default function Dashboard() {
               <Icon><CardIcon /></Icon>
               <div>
                 <h3>Diseñar tarjeta</h3>
-                <p>Define fondo, tipografía y botones. Previsualiza tu página tipo “link-in-bio”.</p>
+                <p>Define fondo, tipografía y botones. Previsualiza tu página tipo "link-in-bio".</p>
               </div>
             </ActionCard>
+
+            <AnalyticsCard to="/analytics" aria-label="Ir a Analytics">
+              <IconGreen><ChartIcon /></IconGreen>
+              <div>
+                <h3>Analytics</h3>
+                <p>
+                  Visualiza cuántas personas visitan tu perfil, qué enlaces generan más clicks y la evolución día a día.
+                  {quickStats !== null && (
+                    <span style={{ color: "#059669", fontWeight: 600 }}>
+                      {" "}· {quickStats.totalViews} visitas y {quickStats.totalClicks} clicks en los últimos 7 días.
+                    </span>
+                  )}
+                </p>
+              </div>
+            </AnalyticsCard>
           </Actions>
 
           <Footer>
-            <div className="mini">
-              {/* <span className="dot" /> */}
-              {/* <span>Linkeo • UI sobria blanco/negro</span> */}
-            </div>
+            <div className="mini" />
             <div>© {new Date().getFullYear()} Linkeo</div>
           </Footer>
         </Main>

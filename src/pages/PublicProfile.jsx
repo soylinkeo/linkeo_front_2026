@@ -301,7 +301,26 @@ function GalleryWidget({ w, tc }) {
     </Gallery>
   );
 }
+function getTrackingKey(link, index = 0) {
+  if (!link) return `unknown_${index}`;
 
+  if (link.isCustom) {
+    return `custom_${link.id || index}`;
+  }
+
+  return link.id ? `${link.key}_${link.id}` : `${link.key}_${index}`;
+}
+async function trackEvent(slug, type, linkKey = "", linkName = "", linkUrl = "") {
+  try {
+    await fetch("https://linkeobackend2026-production.up.railway.app/api/analytics/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, type, linkKey, linkName, linkUrl }),
+    });
+  } catch {
+    // silencioso
+  }
+}
 /* =================== PAGE =================== */
 export default function PublicProfile() {
   const { slug } = useParams();
@@ -319,6 +338,7 @@ export default function PublicProfile() {
         if (!alive) return;
         if (!data) throw new Error("Respuesta vacía del servidor");
         setDoc(data);
+        trackEvent(slug, "profile_view");
       } catch (e) {
         if (!alive) return;
         setErr(e?.message || "No se pudo cargar el perfil");
@@ -415,7 +435,13 @@ avatarRectRadius:      t.avatarRectRadius      ?? 16,
   }, [doc]);
 
   /* ── All links combined for vCard ── */
-  const allLinks = useMemo(() => [...platformLinks, ...customLinks], [platformLinks, customLinks]);
+  const allLinks = useMemo(() => {
+  const combined = [
+    ...platformLinks.map(l => ({ ...l, _sortOrder: l.order ?? 9999 })),
+    ...customLinks.map((l, i) => ({ ...l, _sortOrder: l.order ?? (9999 + i) })),
+  ];
+  return combined.sort((a, b) => a._sortOrder - b._sortOrder);
+}, [platformLinks, customLinks]);
 
   const colors = (key) => {
     const brand = PLATFORMS.find(p=>p.key===key)?.brand || th.btnBg;
@@ -513,57 +539,115 @@ avatarRectRadius:      t.avatarRectRadius      ?? 16,
 
           <Bio $a={th.align}>
             <h2>{th.title?.trim() || "Tu nombre o marca"}</h2>
-            {th.description?.trim() && <p>{th.description.trim()}</p>}
+        {th.description?.trim() && <p style={{ whiteSpace: 'pre-wrap' }}>{th.description.trim()}</p>}
           </Bio>
 
-          {/* ── Platform links ── */}
-          {platformLinks.map(l => {
-            const { bg: lbg, border, text } = colors(l.key);
-            const Icon  = Icons[l.key] || Icons.custom;
-            const bc    = th.btnVariant === "outline" ? border : th.btnUseBrand ? border : "transparent";
-            const btnBg = th.btnVariant === "filled"  ? lbg
-                        : th.btnVariant === "glass"   ? "rgba(255,255,255,.18)"
-                        : "transparent";
-            return (
-              <BtnRow key={`${l.key}-${l.order??""}`} $center={centerBtnW}>
-                <div style={{ width: centerBtnW ? `${th.btnWidth}%` : "100%", minWidth: 0 }}>
-                  <SocialBtn
-                    href={l.href} target="_blank" rel="noreferrer"
-                    $r={radius} $bw={th.btnBorderWidth} $bc={bc} $bg={btnBg} $tc={text}
-                    $blur={th.btnVariant === "glass"} $sh={th.btnShadow}
-                    $flip={th.btnIconSide === "right"} $ca={th.btnContentAlign}
-                  >
-                    <Icon />
-                    <strong>{PLATFORMS.find(p=>p.key===l.key)?.name || l.key}</strong>
-                  </SocialBtn>
-                </div>
-              </BtnRow>
-            );
-          })}
+   {/* ── Todos los links en orden ── */}
+ {allLinks.map((l, i) => {
+  const trackingKey = getTrackingKey(l, i);
 
-          {/* ── ✅ Custom links ── */}
-          {customLinks.map(l => {
-            const bc    = th.btnVariant === "outline" ? th.btnBorder : th.btnUseBrand ? "#7c3aed" : "transparent";
-            const btnBg = th.btnVariant === "filled"  ? (th.btnUseBrand ? "#7c3aed" : th.btnBg)
-                        : th.btnVariant === "glass"   ? "rgba(255,255,255,.18)"
-                        : "transparent";
-            return (
-              <BtnRow key={`custom-${l.id}`} $center={centerBtnW}>
-                <div style={{ width: centerBtnW ? `${th.btnWidth}%` : "100%", minWidth: 0 }}>
-                  <SocialBtn
-                    href={l.href} target="_blank" rel="noreferrer"
-                    $r={radius} $bw={th.btnBorderWidth} $bc={bc} $bg={btnBg} $tc={th.btnText}
-                    $blur={th.btnVariant === "glass"} $sh={th.btnShadow}
-                    $flip={th.btnIconSide === "right"} $ca={th.btnContentAlign}
-                  >
-                    <Icons.custom />
-                    <strong>{l.name || "Enlace"}</strong>
-                  </SocialBtn>
-                </div>
-              </BtnRow>
-            );
-          })}
+  if (l.isCustom) {
+    const bc =
+      th.btnVariant === "outline"
+        ? th.btnBorder
+        : th.btnUseBrand
+        ? "#7c3aed"
+        : "transparent";
 
+    const btnBg =
+      th.btnVariant === "filled"
+        ? th.btnUseBrand
+          ? "#7c3aed"
+          : th.btnBg
+        : th.btnVariant === "glass"
+        ? "rgba(255,255,255,.18)"
+        : "transparent";
+
+    return (
+      <BtnRow key={`custom-${l.id || i}`} $center={centerBtnW}>
+        <div style={{ width: centerBtnW ? `${th.btnWidth}%` : "100%", minWidth: 0 }}>
+          <SocialBtn
+            href={l.href}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() =>
+              trackEvent(
+                slug,
+                "link_click",
+                trackingKey,
+                l.name || "Enlace",
+                l.href
+              )
+            }
+            $r={radius}
+            $bw={th.btnBorderWidth}
+            $bc={bc}
+            $bg={btnBg}
+            $tc={th.btnText}
+            $blur={th.btnVariant === "glass"}
+            $sh={th.btnShadow}
+            $flip={th.btnIconSide === "right"}
+            $ca={th.btnContentAlign}
+          >
+            <Icons.custom />
+            <strong>{l.name || "Enlace"}</strong>
+          </SocialBtn>
+        </div>
+      </BtnRow>
+    );
+  }
+
+  const { bg: lbg, border, text } = colors(l.key);
+  const Icon = Icons[l.key] || Icons.custom;
+  const platformName = PLATFORMS.find((p) => p.key === l.key)?.name || l.key;
+
+  const bc =
+    th.btnVariant === "outline"
+      ? border
+      : th.btnUseBrand
+      ? border
+      : "transparent";
+
+  const btnBg =
+    th.btnVariant === "filled"
+      ? lbg
+      : th.btnVariant === "glass"
+      ? "rgba(255,255,255,.18)"
+      : "transparent";
+
+  return (
+    <BtnRow key={`${l.key}-${l.id || l.order || i}`} $center={centerBtnW}>
+      <div style={{ width: centerBtnW ? `${th.btnWidth}%` : "100%", minWidth: 0 }}>
+        <SocialBtn
+          href={l.href}
+          target="_blank"
+          rel="noreferrer"
+          onClick={() =>
+            trackEvent(
+              slug,
+              "link_click",
+              trackingKey,
+              platformName,
+              l.href
+            )
+          }
+          $r={radius}
+          $bw={th.btnBorderWidth}
+          $bc={bc}
+          $bg={btnBg}
+          $tc={text}
+          $blur={th.btnVariant === "glass"}
+          $sh={th.btnShadow}
+          $flip={th.btnIconSide === "right"}
+          $ca={th.btnContentAlign}
+        >
+          <Icon />
+          <strong>{platformName}</strong>
+        </SocialBtn>
+      </div>
+    </BtnRow>
+  );
+})}
           {/* ── Widgets ── */}
           {th.widgets.map(w => {
             if (w.visible === false) return null;
@@ -573,14 +657,36 @@ avatarRectRadius:      t.avatarRectRadius      ?? 16,
             return null;
           })}
 
-          {/* ── vCard ── */}
-          {(th.showVCard ?? true) && (
-            <BtnRow $center={centerBtnW}>
-              <div style={{ width: centerBtnW ? `${th.btnWidth}%` : "100%", minWidth: 0 }}>
-                <VCardBtn onClick={saveVCard}>📇 Guardar contacto</VCardBtn>
-              </div>
-            </BtnRow>
-          )}
+       
+        {/* ── vCard ── */}
+{(th.showVCard ?? true) && (() => {
+  const bc    = th.btnVariant === "outline" ? th.btnBorder : th.btnUseBrand ? th.btnBorder : "transparent";
+  const btnBg = th.btnVariant === "filled"  ? (th.btnUseBrand ? th.btnBg : th.btnBg)
+              : th.btnVariant === "glass"   ? "rgba(255,255,255,.18)"
+              : "transparent";
+  return (
+    <BtnRow $center={centerBtnW}>
+      <div style={{ width: centerBtnW ? `${th.btnWidth}%` : "100%", minWidth: 0 }}>
+        <SocialBtn
+          as="button"
+      onClick={() => {
+  saveVCard();
+ trackEvent(slug, "link_click", "vcard", "Guardar contacto", "");
+}}
+          $r={radius} $bw={th.btnBorderWidth} $bc={bc} $bg={btnBg} $tc={th.btnText}
+          $blur={th.btnVariant === "glass"} $sh={th.btnShadow}
+          $flip={th.btnIconSide === "right"} $ca={th.btnContentAlign}
+          style={{ border: `${th.btnBorderWidth}px solid ${bc}`, cursor: "pointer" }}
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm-1 14H5a1 1 0 0 1-1-1V8l8 5 8-5v9a1 1 0 0 1-1 1ZM12 11 4 6h16l-8 5Z"/>
+          </svg>
+          <strong>Guardar contacto</strong>
+        </SocialBtn>
+      </div>
+    </BtnRow>
+  );
+})()}
 
         </Col>
       </Page>

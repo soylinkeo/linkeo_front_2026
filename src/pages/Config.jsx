@@ -4,7 +4,24 @@ import styled, { keyframes, css } from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { API } from "../lib/api";
+import { useToast }        from "../hooks/useToast";
+import { ToastContainer }  from "../components/ToastContainer";
 
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 /* ================= ICONOS ================= */
 const Icons = {
   whatsapp: (p) => (
@@ -1242,10 +1259,241 @@ const STYLE_PRESETS = [
   },
 ];
 
+function SortList({ links, onReorder, onToggle, platforms, btnColorsFor, profile }) {
+  const [dragIdx, setDragIdx] = useState(null);
+  const [overIdx, setOverIdx] = useState(null);
+  const pointerRef = useRef({ active: false });
+
+  const moveItem = (idx, dir) => {
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= links.length) return;
+    const arr = [...links];
+    [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+    onReorder(arr);
+  };
+
+  const handlePointerDown = (e, idx) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    pointerRef.current = { active: true };
+    setDragIdx(idx);
+    setOverIdx(idx);
+  };
+
+  const handlePointerMove = (e, idx) => {
+    if (!pointerRef.current.active) return;
+    const rows = document.querySelectorAll('[data-sortrow]');
+    const y = e.clientY;
+    let closest = idx;
+    let minDist = Infinity;
+    rows.forEach(row => {
+      const rect = row.getBoundingClientRect();
+      const mid = rect.top + rect.height / 2;
+      const dist = Math.abs(y - mid);
+      if (dist < minDist) { minDist = dist; closest = parseInt(row.dataset.sortrow); }
+    });
+    setOverIdx(closest);
+  };
+
+  const handlePointerUp = () => {
+    if (!pointerRef.current.active) return;
+    pointerRef.current.active = false;
+    if (dragIdx !== null && overIdx !== null && dragIdx !== overIdx) {
+      const arr = [...links];
+      const [moved] = arr.splice(dragIdx, 1);
+      arr.splice(overIdx, 0, moved);
+      onReorder(arr);
+    }
+    setDragIdx(null);
+    setOverIdx(null);
+  };
+
+  return (
+    <div>
+      {links.map((link, idx) => {
+        const platform = platforms.find(p => p.key === link.key);
+        const { bg, border, text } = btnColorsFor(link.isCustom ? 'custom' : link.key);
+        const radius = profile.btnPill ? 999 : profile.btnRadius;
+        const btnBg = profile.btnVariant==="filled" ? bg : profile.btnVariant==="glass" ? "rgba(255,255,255,.18)" : "transparent";
+        const bc = profile.btnVariant==="outline" ? border : profile.btnUseBrand ? border : "transparent";
+
+        return (
+          <div key={link.key} data-sortrow={idx} style={{
+            display:"flex", alignItems:"center", gap:6, padding:"4px 0",
+            opacity: dragIdx===idx ? 0.4 : 1,
+            borderTop: overIdx===idx && dragIdx!==idx ? '2px solid #6366f1' : '2px solid transparent',
+          }}>
+            {/* Botones ↑↓ — siempre funcionan */}
+            <div style={{ display:'flex', flexDirection:'column', gap:1, flexShrink:0 }}>
+              <button onClick={() => moveItem(idx, -1)} disabled={idx===0} style={{
+                all:'unset', cursor: idx===0 ? 'default':'pointer',
+                width:20, height:18, display:'flex', alignItems:'center', justifyContent:'center',
+                color: idx===0 ? '#d1d5db':'#6b7280', fontSize:11,
+              }}>▲</button>
+              <button onClick={() => moveItem(idx, 1)} disabled={idx===links.length-1} style={{
+                all:'unset', cursor: idx===links.length-1 ? 'default':'pointer',
+                width:20, height:18, display:'flex', alignItems:'center', justifyContent:'center',
+                color: idx===links.length-1 ? '#d1d5db':'#6b7280', fontSize:11,
+              }}>▼</button>
+            </div>
+
+            {/* Manija drag con pointer events */}
+            <div
+              onPointerDown={(e) => handlePointerDown(e, idx)}
+              onPointerMove={(e) => handlePointerMove(e, idx)}
+              onPointerUp={handlePointerUp}
+              style={{ cursor:'grab', color:"#9ca3af", padding:"4px", borderRadius:8,
+                display:"flex", alignItems:"center", flexShrink:0, touchAction:'none' }}
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16">
+                <circle cx="9" cy="6" r="1.5" fill="currentColor"/>
+                <circle cx="15" cy="6" r="1.5" fill="currentColor"/>
+                <circle cx="9" cy="12" r="1.5" fill="currentColor"/>
+                <circle cx="15" cy="12" r="1.5" fill="currentColor"/>
+                <circle cx="9" cy="18" r="1.5" fill="currentColor"/>
+                <circle cx="15" cy="18" r="1.5" fill="currentColor"/>
+              </svg>
+            </div>
+
+            {/* Preview */}
+            <div style={{
+              flex:1, display:"flex", alignItems:"center", gap:8, padding:"9px 12px",
+              borderRadius: radius>20 ? 999 : radius,
+              border:`${profile.btnBorderWidth}px solid ${bc}`,
+              background:btnBg, color:text, fontSize:12, fontWeight:600,
+              minWidth:0, overflow:"hidden",
+            }}>
+              {link.isCustom
+                ? React.createElement(Icons.custom)
+                : platform && Icons[platform.key] && React.createElement(Icons[platform.key])}
+              <span style={{ flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                {link.isCustom ? (link.name || "Enlace personalizado") : (platform?.name || link.key)}
+              </span>
+            </div>
+
+            {/* Ojo */}
+            <button onClick={() => onToggle(link.key, link.isCustom)} style={{
+              all:"unset", cursor:"pointer", padding:"5px", borderRadius:8, flexShrink:0,
+              color: link.visible ? "#6366f1" : "#d1d5db",
+            }}>
+              <svg viewBox="0 0 24 24" width="17" height="17">
+                {link.visible
+                  ? <path fill="currentColor" d="M12 5C7 5 2.7 8.6 1 13.5 2.7 18.4 7 22 12 22s9.3-3.6 11-8.5C21.3 8.6 17 5 12 5Zm0 13a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9Zm0-7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z"/>
+                  : <path fill="currentColor" d="M17.9 5.1 16.5 6.5A9.8 9.8 0 0 0 12 5C7 5 2.7 8.6 1 13.5c.8 2.3 2.2 4.3 4.1 5.8l-1.5 1.6 1.4 1.4 14-14-1-1.2ZM12 8a5.3 5.3 0 0 1 1.5.2L9.2 12.5A4.4 4.4 0 0 1 9 11.5 3 3 0 0 1 12 8Zm0 9c-2.8 0-5.3-1.5-7-4a9 9 0 0 1 3.5-3.3l-1.3 1.3a5 5 0 0 0 6.1 6.1L12 18.2Z"/>
+                }
+              </svg>
+            </button>
+          </div>
+        );
+      })}
+      <div style={{ fontSize:11, color:'#9ca3af', textAlign:'center', paddingTop:6 }}>
+        ▲▼ para reordenar · ⠿ para arrastrar · ojo para mostrar/ocultar
+      </div>
+    </div>
+  );
+}
+
+function DragSortList({ links, onReorder, onToggle, platforms, btnColorsFor, profile }) {
+  const [dragIdx, setDragIdx] = useState(null);
+  const [overIdx, setOverIdx] = useState(null);
+
+  const handleDragStart = (e, idx) => {
+    setDragIdx(idx);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(idx));
+  };
+
+  const handleDragEnter = (e, idx) => {
+    e.preventDefault();
+    if (idx !== dragIdx) setOverIdx(idx);
+  };
+
+  const handleDrop = (e, idx) => {
+    e.preventDefault();
+    if (dragIdx === null || dragIdx === idx) return;
+    const newLinks = [...links];
+    const [moved] = newLinks.splice(dragIdx, 1);
+    newLinks.splice(idx, 0, moved);
+    onReorder(newLinks);
+    setDragIdx(null);
+    setOverIdx(null);
+  };
+
+  return (
+    <div>
+      {links.map((link, idx) => {
+        const platform = platforms.find(p => p.key === link.key);
+        const { bg, border, text } = btnColorsFor(link.isCustom ? 'custom' : link.key);
+        const radius = profile.btnPill ? 999 : profile.btnRadius;
+        const btnBg = profile.btnVariant === "filled" ? bg : profile.btnVariant === "glass" ? "rgba(255,255,255,.18)" : "transparent";
+        const bc = profile.btnVariant === "outline" ? border : profile.btnUseBrand ? border : "transparent";
+
+        return (
+          <div
+            key={link.key}
+            draggable
+            onDragStart={(e) => handleDragStart(e, idx)}
+            onDragEnter={(e) => handleDragEnter(e, idx)}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => handleDrop(e, idx)}
+            onDragEnd={() => { setDragIdx(null); setOverIdx(null); }}
+            style={{
+              opacity: dragIdx === idx ? 0.35 : 1,
+              borderTop: overIdx === idx && dragIdx !== idx ? '2px solid #6366f1' : '2px solid transparent',
+              transition: 'opacity 0.15s',
+            }}
+          >
+            <div style={{ display:"flex", alignItems:"center", gap:8, padding:"5px 0", cursor:'grab' }}>
+              <div style={{ color:"#9ca3af", padding:"4px 6px", borderRadius:8, display:"flex", alignItems:"center", flexShrink:0 }}>
+                <svg viewBox="0 0 24 24" width="18" height="18">
+                  <circle cx="9"  cy="6"  r="1.5" fill="currentColor"/>
+                  <circle cx="15" cy="6"  r="1.5" fill="currentColor"/>
+                  <circle cx="9"  cy="12" r="1.5" fill="currentColor"/>
+                  <circle cx="15" cy="12" r="1.5" fill="currentColor"/>
+                  <circle cx="9"  cy="18" r="1.5" fill="currentColor"/>
+                  <circle cx="15" cy="18" r="1.5" fill="currentColor"/>
+                </svg>
+              </div>
+              <div style={{
+                flex:1, display:"flex", alignItems:"center", gap:10,
+                padding:"10px 14px", borderRadius: radius > 20 ? 999 : radius,
+                border:`${profile.btnBorderWidth}px solid ${bc}`,
+                background:btnBg, color:text, fontSize:13, fontWeight:600,
+                minWidth:0, overflow:"hidden", pointerEvents:'none',
+              }}>
+                {link.isCustom
+                  ? React.createElement(Icons.custom)
+                  : platform && Icons[platform.key] && React.createElement(Icons[platform.key])
+                }
+                <span style={{ flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                  {link.isCustom ? (link.name || "Enlace personalizado") : (platform?.name || link.key)}
+                </span>
+              </div>
+              <button onClick={(e) => { e.stopPropagation(); onToggle(link.key, link.isCustom); }} style={{
+                all:"unset", cursor:"pointer", padding:"6px", borderRadius:8,
+                color: link.visible ? "#6366f1" : "#9ca3af", flexShrink:0,
+              }}>
+                <svg viewBox="0 0 24 24" width="18" height="18">
+                  {link.visible
+                    ? <path fill="currentColor" d="M12 5C7 5 2.7 8.6 1 13.5 2.7 18.4 7 22 12 22s9.3-3.6 11-8.5C21.3 8.6 17 5 12 5Zm0 13a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9Zm0-7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z"/>
+                    : <path fill="currentColor" d="M17.9 5.1 16.5 6.5A9.8 9.8 0 0 0 12 5C7 5 2.7 8.6 1 13.5c.8 2.3 2.2 4.3 4.1 5.8l-1.5 1.6 1.4 1.4 14-14-1-1.2ZM12 8a5.3 5.3 0 0 1 1.5.2L9.2 12.5A4.4 4.4 0 0 1 9 11.5 3 3 0 0 1 12 8Zm0 9c-2.8 0-5.3-1.5-7-4a9 9 0 0 1 3.5-3.3l-1.3 1.3a5 5 0 0 0 6.1 6.1L12 18.2Z"/>
+                  }
+                </svg>
+              </button>
+            </div>
+          </div>
+        );
+      })}
+      <div style={{ fontSize:12, color:'#9ca3af', textAlign:'center', paddingTop:8 }}>
+        Arrastra ⠿ para reordenar · El ojo muestra u oculta
+      </div>
+    </div>
+  );
+}
 /* =================== MAIN COMPONENT =================== */
 export default function Config() {
   const nav = useNavigate();
   const { user, profile: ctxProfile, setProfile: setCtxProfile, isAuthed } = useAuth();
+const { toasts, toast, dismiss } = useToast();
 
   const STORAGE_KEY = user?.username
     ? `social_tiles_theme_v10_${user.username}`
@@ -1266,10 +1514,14 @@ export default function Config() {
   const [profile, setProfile] = useState(DEFAULT_PROFILE);
   const [errors, setErrors] = useState({});
   const [openStep, setOpenStep] = useState(1);
+  const sensors = useSensors(
+  useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+  useSensor(TouchSensor,   { activationConstraint: { delay: 150, tolerance: 8 } })
+);
   const [loadingNet, setLoadingNet] = useState(false);
   const [isDraggingBg, setIsDraggingBg] = useState(false);
   const positionPadRef = useRef(null);
-
+const [linkTab, setLinkTab] = useState('redes');
   const activeBgImage = useMemo(() => {
     const imgs = profile.bgImages || [];
     if (imgs.length === 0) return profile.bgImageDataUrl || "";
@@ -1400,11 +1652,87 @@ export default function Config() {
   const [openWidgetIds, setOpenWidgetIds] = useState({});
   const toggleWidgetOpen = (id) => setOpenWidgetIds(prev => ({ ...prev, [id]: !prev[id] }));
 
-  const visibleLinks = useMemo(() => {
-    const platform = items.filter(i => i.visible && isValidUrl(i.url)).map((i, idx) => ({ ...i, href: normalizeUrl(i.url), order: idx, isCustom: false }));
-    const custom = (profile.customLinks || []).filter(l => l.visible && l.url && l.url.trim()).map((l, idx) => ({ key: `custom_${l.id}`, name: l.name || 'Enlace', url: l.url, href: normalizeUrl(l.url), visible: true, order: platform.length + idx, isCustom: true }));
-    return [...platform, ...custom];
-  }, [items, profile.customLinks]);
+const visibleLinks = useMemo(() => {
+  const platform = items
+    .filter(i => i.visible && isValidUrl(i.url))
+    .map(i => ({ ...i, href: normalizeUrl(i.url), isCustom: false, _sortOrder: i.order ?? 9999 }));
+
+  const custom = (profile.customLinks || [])
+    .filter(l => l.visible && l.url && l.url.trim())
+    .map((l, idx) => ({
+      key: `custom_${l.id}`,
+      id: l.id,
+      name: l.name || 'Enlace',
+      url: l.url,
+      href: normalizeUrl(l.url),
+      visible: true,
+      isCustom: true,
+      _sortOrder: l.order ?? (9999 + idx),
+    }));
+
+  return [...platform, ...custom].sort((a, b) => a._sortOrder - b._sortOrder);
+}, [items, profile.customLinks]);
+
+const sortableLinks = useMemo(() => {
+  const platform = items
+    .filter(i => i.url && i.url.trim())
+    .map(i => ({ ...i, isCustom: false, _sortOrder: i.order ?? 9999 }));
+
+  const custom = (profile.customLinks || [])
+    .filter(l => l.url && l.url.trim())
+    .map((l, idx) => ({
+      key:         `custom_${l.id}`,
+      id:          l.id,
+      name:        l.name,
+      url:         l.url,
+      visible:     l.visible,
+      isCustom:    true,
+      _sortOrder:  l.order ?? (9999 + idx),
+    }));
+
+  return [...platform, ...custom].sort((a, b) => a._sortOrder - b._sortOrder);
+}, [items, profile.customLinks]);
+const sortableLinksRef = useRef(sortableLinks);
+useEffect(() => { sortableLinksRef.current = sortableLinks; }, [sortableLinks]);
+
+const handleReorder = (newLinks) => {
+  // Asignar order global a todos según posición en la lista mezclada
+  newLinks.forEach((l, idx) => { l._globalOrder = idx; });
+
+  const platformsReordered = newLinks.filter(l => !l.isCustom);
+  const customsReordered   = newLinks.filter(l => l.isCustom);
+
+  setItems(prevItems => {
+    const sinUrl = prevItems.filter(i => !i.url || !i.url.trim());
+    const updated = platformsReordered.map(l => ({
+      ...prevItems.find(i => i.key === l.key),
+      order: l._globalOrder,
+    }));
+    return [...updated, ...sinUrl];
+  });
+
+  setProfile(prev => {
+    const existingCustom = prev.customLinks || [];
+    const customConUrl = customsReordered
+      .map(l => {
+        const found = existingCustom.find(c => c.id === l.id);
+        return found ? { ...found, order: l._globalOrder } : null;
+      })
+      .filter(Boolean);
+    const customSinUrl = existingCustom.filter(c => !c.url || !c.url.trim());
+    return { ...prev, customLinks: [...customConUrl, ...customSinUrl] };
+  });
+};
+
+const handleToggleSortable = (key, isCustom) => {
+  if (isCustom) {
+    const id = key.replace("custom_", "");
+    setProfile(prev => ({ ...prev, customLinks: (prev.customLinks||[]).map(l => l.id===id ? {...l, visible:!l.visible} : l) }));
+  } else {
+    setVisible(key, !(items.find(i => i.key===key)?.visible ?? true));
+  }
+};
+
 
   const validateOne = k => {
     const i = byKey(k);
@@ -1514,13 +1842,13 @@ export default function Config() {
   /* ---- Backend ---- */
   const toServerPayload = () => {
     // eslint-disable-next-line no-unused-vars
-    const { customLinks: _cl, bgImages: _bi, avatarDataUrl: _av, pdfDataUrl: _pdf, bgImageDataUrl: _bgd, widgets: _w, ...themeRest } = profile;
+const { customLinks: _cl, bgImages: _bi, pdfDataUrl: _pdf, bgImageDataUrl: _bgd, widgets: _w, ...themeRest } = profile;
     return {
       displayName: profile.title,
       bio: profile.description,
       theme: { ...themeRest, bgImageUrl: activeBgImage, avatarUrl: profile.avatarDataUrl, pdfUrl: profile.pdfDataUrl },
-      links: items.map((i, order) => ({ key: i.key, url: i.url, visible: i.visible, order })),
-      customLinks: (profile.customLinks || []).map(({ id, name, url, visible }) => ({ id, name, url, visible })),
+     links: items.map(i => ({ key: i.key, url: i.url, visible: i.visible, order: i.order ?? 9999 })),
+customLinks: (profile.customLinks || []).map(({ id, name, url, visible, order }) => ({ id, name, url, visible, order: order ?? 0 })),
     };
   };
 
@@ -1539,10 +1867,18 @@ export default function Config() {
       pdfDataUrl: t.pdfUrl || "",
       bgImages: t.bgImages || (t.bgImageUrl ? [{ dataUrl: t.bgImageUrl, name: "fondo.jpg" }] : []),
       customLinks: restoredCustomLinks,
+      avatarShape:           t.avatarShape           ?? "circle",
+avatarPosX:            t.avatarPosX            ?? 50,
+avatarPosY:            t.avatarPosY            ?? 50,
+avatarZoom:            t.avatarZoom            ?? 120,
+avatarHeight:          t.avatarHeight          ?? 160,
+avatarRadius:          t.avatarRadius          ?? 0,
+avatarGradientOpacity: t.avatarGradientOpacity ?? 0.55,
+avatarRectSize:        t.avatarRectSize        ?? 110,
+avatarRectRadius:      t.avatarRectRadius      ?? 16,
     };
     const serverLinks = Array.isArray(doc?.links) ? doc.links : [];
-    const mergedLinks = PLATFORMS.map(p => { const f = serverLinks.find(x => x.key === p.key); return { key: p.key, url: f?.url || "", visible: f?.visible ?? true, open: false }; });
-    return { profile: serverProfile, items: mergedLinks };
+const mergedLinks = PLATFORMS.map(p => { const f = serverLinks.find(x => x.key === p.key); return { key: p.key, url: f?.url || "", visible: f?.visible ?? true, open: false, order: f?.order ?? 9999 }; });    return { profile: serverProfile, items: mergedLinks };
   };
 
   const loadFromBackend = async () => {
@@ -1553,7 +1889,7 @@ export default function Config() {
       setProfile(mapped.profile); setItems(mapped.items);
       setCtxProfile(data);
     } catch (e) {
-      alert("❌ Error cargando: " + (e.message || "Desconocido"));
+   toast.error("Error al cargar", e.message || "Ocurrió un problema inesperado");
     } finally { setLoadingNet(false); }
   };
 
@@ -1564,9 +1900,10 @@ export default function Config() {
       const mapped = fromServerDoc(saved);
       setProfile(mapped.profile); setItems(mapped.items);
       setCtxProfile(saved);
-      alert("✅ Guardado correctamente");
+toast.success("¡Guardado!", "Los cambios se han publicado en tu perfil");
+
     } catch (e) {
-      alert("❌ Error guardando: " + (e.message || "Desconocido"));
+toast.error("Error al cargar", e.message || "Ocurrió un problema inesperado");
     } finally { setLoadingNet(false); }
   };
 
@@ -1980,121 +2317,112 @@ export default function Config() {
             )}
           </Section>
 
-          {/* STEP 5: Links */}
-          <Section>
-            <SectionHeader onClick={() => setOpenStep(s => s === 5 ? 0 : 5)}>
-              <h3><StepNum>5</StepNum> Enlaces por red social</h3>
-              <ChevronIcon $open={openStep === 5}>⌄</ChevronIcon>
-            </SectionHeader>
-            {openStep === 5 && (
-              <SectionBody>
-                {/* FIX: align-items: start on LinkCardsGrid prevents the side card
-                    from stretching to match the open card's height, which made it
-                    look like it was "opening" with empty content */}
-                <LinkCardsGrid>
-                  {[0, 1].map(col => (
-                    <LinkCardsCol key={col}>
-                      {PLATFORMS.filter((_, idx) => idx % 2 === col).map(p => {
-                        const it = items.find(i => i.key === p.key);
-                        const Icon = Icons[p.key] || Icons.custom;
-                        return (
-                          <LinkCard key={p.key}>
-                            <LinkCardHeader $brand={p.brand} onClick={() => toggleOpen(p.key)}>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icon />{p.name}</span>
-                              <span style={{ fontSize: 11, background: 'rgba(255,255,255,0.2)', padding: '3px 8px', borderRadius: 6 }}>
-                                {it?.open ? '▲' : it?.url ? '✓' : 'Editar'}
-                              </span>
-                            </LinkCardHeader>
-                            {it?.open && (
-                              <LinkCardBody>
-                                {it?.url && it.url.trim().length > 0 && (
-                                  <UrlPreviewLink
-                                    href={normalizeUrl(it.url)}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    onClick={e => e.stopPropagation()}
-                                  >
-                                    <Icons.externalLink />
-                                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                      {normalizeUrl(it.url)}
-                                    </span>
-                                  </UrlPreviewLink>
-                                )}
-                                <TextInput
-                                  type="text"
-                                  placeholder={PLACEHOLDERS[p.key]}
-                                  value={it?.url || ""}
-                                  onChange={e => setUrl(p.key, e.target.value)}
-                                  onBlur={() => validateOne(p.key)}
-                                />
-                                {errors[p.key] && <Error>{errors[p.key]}</Error>}
-                                <Label as="label" style={{ fontSize: 13 }}>
-                                  <input type="checkbox" checked={it?.visible ?? true} onChange={e => setVisible(p.key, e.target.checked)} />
-                                  Visible en tu perfil
-                                </Label>
-                              </LinkCardBody>
-                            )}
-                          </LinkCard>
-                        );
-                      })}
-                    </LinkCardsCol>
-                  ))}
-                </LinkCardsGrid>
-              </SectionBody>
-            )}
-          </Section>
+   <Section>
+  <SectionHeader onClick={() => setOpenStep(s => s === 5 ? 0 : 5)}>
+    <h3><StepNum>5</StepNum> Enlaces</h3>
+    <ChevronIcon $open={openStep === 5}>⌄</ChevronIcon>
+  </SectionHeader>
+  {openStep === 5 && (
+    <SectionBody>
+      {/* Sub-tabs */}
+      <Row>
+        <SegControl>
+          <button className={linkTab === 'redes' ? 'active' : ''} onClick={() => setLinkTab('redes')}>📱 Redes</button>
+          <button className={linkTab === 'custom' ? 'active' : ''} onClick={() => setLinkTab('custom')}>✨ Personalizados</button>
+          <button className={linkTab === 'orden' ? 'active' : ''} onClick={() => setLinkTab('orden')}>↕ Orden</button>
+        </SegControl>
+      </Row>
 
-          {/* STEP 5b: Custom Links */}
-          <Section>
-            <SectionHeader onClick={() => setOpenStep(s => s === 51 ? 0 : 51)}>
-              <h3><StepNum>+</StepNum> Mis enlaces personalizados</h3>
-              <ChevronIcon $open={openStep === 51}>⌄</ChevronIcon>
-            </SectionHeader>
-            {openStep === 51 && (
-              <SectionBody>
-                <CustomLinksWrap>
-                  {customLinks.length === 0 && (
-                    <div style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, padding: '16px 0' }}>
-                      Aún no tienes enlaces personalizados. ¡Agrega el primero!
-                    </div>
-                  )}
-                  {customLinks.map(l => (
-                    <CustomLinkRow key={l.id}>
-                      <TextInput
-                        placeholder="Nombre (ej: Mi tienda)"
-                        value={l.name}
-                        onChange={e => updateCustomLink(l.id, { name: e.target.value })}
-                        style={{ margin: 0 }}
-                      />
-                      <TextInput
-                        placeholder="https://..."
-                        value={l.url}
-                        onChange={e => updateCustomLink(l.id, { url: e.target.value })}
-                        style={{ margin: 0 }}
-                      />
-                      <SmallIconBtn
-                        title={l.visible ? 'Ocultar' : 'Mostrar'}
-                        onClick={() => updateCustomLink(l.id, { visible: !l.visible })}
-                      >
-                        {l.visible
-                          ? <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 5C7 5 2.7 8.6 1 13.5 2.7 18.4 7 22 12 22s9.3-3.6 11-8.5C21.3 8.6 17 5 12 5Zm0 13a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9Zm0-7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z"/></svg>
-                          : <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M17.9 5.1 16.5 6.5A9.8 9.8 0 0 0 12 5C7 5 2.7 8.6 1 13.5c.8 2.3 2.2 4.3 4.1 5.8l-1.5 1.6 1.4 1.4 14-14-1-1.2ZM12 8a5.3 5.3 0 0 1 1.5.2L9.2 12.5A4.4 4.4 0 0 1 9 11.5 3 3 0 0 1 12 8Zm0 9c-2.8 0-5.3-1.5-7-4a9 9 0 0 1 3.5-3.3l-1.3 1.3a5 5 0 0 0 6.1 6.1L12 18.2c0-.1-.1-.2-.1-.3l.1.1Z"/></svg>
-                        }
-                      </SmallIconBtn>
-                      <SmallIconBtn $danger title="Eliminar" onClick={() => removeCustomLink(l.id)}>
-                        <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" d="M18 6L6 18M6 6l12 12"/></svg>
-                      </SmallIconBtn>
-                    </CustomLinkRow>
-                  ))}
-                  <AddCustomBtn type="button" onClick={addCustomLink}>
-                    <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" d="M12 5v14M5 12h14"/></svg>
-                    Agregar enlace
-                  </AddCustomBtn>
-                </CustomLinksWrap>
-              </SectionBody>
-            )}
-          </Section>
+      {/* Redes */}
+      {linkTab === 'redes' && (
+        <LinkCardsGrid>
+          {[0, 1].map(col => (
+            <LinkCardsCol key={col}>
+              {PLATFORMS.filter((_, idx) => idx % 2 === col).map(p => {
+                const it = items.find(i => i.key === p.key);
+                const Icon = Icons[p.key] || Icons.custom;
+                return (
+                  <LinkCard key={p.key}>
+                    <LinkCardHeader $brand={p.brand} onClick={() => toggleOpen(p.key)}>
+                      <span style={{ display:'flex', alignItems:'center', gap:8 }}><Icon />{p.name}</span>
+                      <span style={{ fontSize:11, background:'rgba(255,255,255,0.2)', padding:'3px 8px', borderRadius:6 }}>
+                        {it?.open ? '▲' : it?.url ? '✓' : 'Editar'}
+                      </span>
+                    </LinkCardHeader>
+                    {it?.open && (
+                      <LinkCardBody>
+                        {it?.url && it.url.trim().length > 0 && (
+                          <UrlPreviewLink href={normalizeUrl(it.url)} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>
+                            <Icons.externalLink />
+                            <span style={{ flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{normalizeUrl(it.url)}</span>
+                          </UrlPreviewLink>
+                        )}
+                        <TextInput type="text" placeholder={PLACEHOLDERS[p.key]} value={it?.url || ""} onChange={e => setUrl(p.key, e.target.value)} onBlur={() => validateOne(p.key)} />
+                        {errors[p.key] && <Error>{errors[p.key]}</Error>}
+                        <Label as="label" style={{ fontSize:13 }}>
+                          <input type="checkbox" checked={it?.visible ?? true} onChange={e => setVisible(p.key, e.target.checked)} />
+                          Visible en tu perfil
+                        </Label>
+                      </LinkCardBody>
+                    )}
+                  </LinkCard>
+                );
+              })}
+            </LinkCardsCol>
+          ))}
+        </LinkCardsGrid>
+      )}
 
+      {/* Personalizados */}
+      {linkTab === 'custom' && (
+        <CustomLinksWrap>
+          {customLinks.length === 0 && (
+            <div style={{ textAlign:'center', color:'#9ca3af', fontSize:13, padding:'16px 0' }}>
+              Aún no tienes enlaces personalizados. ¡Agrega el primero!
+            </div>
+          )}
+          {customLinks.map(l => (
+            <CustomLinkRow key={l.id}>
+              <TextInput placeholder="Nombre (ej: Mi tienda)" value={l.name} onChange={e => updateCustomLink(l.id, { name: e.target.value })} style={{ margin:0 }} />
+              <TextInput placeholder="https://..." value={l.url} onChange={e => updateCustomLink(l.id, { url: e.target.value })} style={{ margin:0 }} />
+              <SmallIconBtn title={l.visible ? 'Ocultar' : 'Mostrar'} onClick={() => updateCustomLink(l.id, { visible: !l.visible })}>
+                {l.visible
+                  ? <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 5C7 5 2.7 8.6 1 13.5 2.7 18.4 7 22 12 22s9.3-3.6 11-8.5C21.3 8.6 17 5 12 5Zm0 13a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9Zm0-7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z"/></svg>
+                  : <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M17.9 5.1 16.5 6.5A9.8 9.8 0 0 0 12 5C7 5 2.7 8.6 1 13.5c.8 2.3 2.2 4.3 4.1 5.8l-1.5 1.6 1.4 1.4 14-14-1-1.2ZM12 8a5.3 5.3 0 0 1 1.5.2L9.2 12.5A4.4 4.4 0 0 1 9 11.5 3 3 0 0 1 12 8Zm0 9c-2.8 0-5.3-1.5-7-4a9 9 0 0 1 3.5-3.3l-1.3 1.3a5 5 0 0 0 6.1 6.1L12 18.2Z"/></svg>
+                }
+              </SmallIconBtn>
+              <SmallIconBtn $danger title="Eliminar" onClick={() => removeCustomLink(l.id)}>
+                <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" d="M18 6L6 18M6 6l12 12"/></svg>
+              </SmallIconBtn>
+            </CustomLinkRow>
+          ))}
+          <AddCustomBtn type="button" onClick={addCustomLink}>
+            <svg viewBox="0 0 24 24" width="16" height="16"><path fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" d="M12 5v14M5 12h14"/></svg>
+            Agregar enlace
+          </AddCustomBtn>
+        </CustomLinksWrap>
+      )}
+
+    {/* Orden — DndContext SIEMPRE montado, solo se oculta visualmente */}
+{linkTab === 'orden' && (
+  sortableLinks.length === 0 ? (
+    <div style={{ textAlign:'center', color:'#9ca3af', fontSize:13, padding:'16px 0' }}>
+      Agrega URLs para ordenarlos aquí.
+    </div>
+  ) : (
+    <SortList
+      links={sortableLinks}
+      onReorder={handleReorder}
+      onToggle={handleToggleSortable}
+      platforms={PLATFORMS}
+      btnColorsFor={btnColorsFor}
+      profile={profile}
+    />
+  )
+)}
+    </SectionBody>
+  )}
+</Section>
           {/* STEP 6: Contacto */}
           <Section>
             <SectionHeader onClick={() => setOpenStep(s => s === 6 ? 0 : 6)}>
@@ -2235,9 +2563,9 @@ export default function Config() {
                     <h2 style={{ opacity: profile.title ? 1 : 0.6, fontStyle: profile.title ? 'normal' : 'italic' }}>
                       {titleText}
                     </h2>
-                    <p style={{ opacity: profile.description ? 1 : 0.6, fontStyle: profile.description ? 'normal' : 'italic' }}>
-                      {descText}
-                    </p>
+                 <p style={{ opacity: profile.description ? 1 : 0.6, fontStyle: profile.description ? 'normal' : 'italic', whiteSpace: 'pre-wrap' }}>
+  {descText}
+</p>
                   </Heading>
 
                   {visibleLinks.length === 0 && (
@@ -2334,14 +2662,31 @@ export default function Config() {
                     return null;
                   })}
 
-                  {(profile.showVCard ?? true) && (
-                    <div
-                      onClick={downloadVCard}
-                      style={{ padding: '10px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', color: profile.textColor, fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, border: '1px solid rgba(255,255,255,0.2)' }}
-                    >
-                      📇 Guardar contacto
-                    </div>
-                  )}
+             {(profile.showVCard ?? true) && (() => {
+  const { bg, border, text } = btnColorsFor('custom');
+  const radius = profile.btnPill ? 999 : profile.btnRadius;
+  const br = profile.btnVariant === 'outline' ? border : profile.btnUseBrand ? border : 'transparent';
+  const bgColor = profile.btnVariant === 'filled' ? bg : profile.btnVariant === 'glass' ? 'rgba(255,255,255,.18)' : 'transparent';
+  return (
+    <LinkRow $align={profile.btnAlign}>
+      <div style={{ width: profile.btnAlign === 'center' ? `${profile.btnWidth}%` : '100%' }}>
+        <LinkBtn
+          as="div"
+          onClick={downloadVCard}
+          $variant={profile.btnVariant} $bg={bgColor} $border={br}
+          $borderWidth={profile.btnBorderWidth} $text={text} $radius={radius}
+          $shadow={profile.btnShadow} $iconSide={profile.btnIconSide} $contentAlign={profile.btnContentAlign}
+          style={{ cursor: 'pointer' }}
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm-1 14H5a1 1 0 0 1-1-1V8l8 5 8-5v9a1 1 0 0 1-1 1ZM12 11 4 6h16l-8 5Z"/>
+          </svg>
+          <strong>Guardar contacto</strong>
+        </LinkBtn>
+      </div>
+    </LinkRow>
+  );
+})()}
                 </ScreenContent>
               </IPhoneScreen>
             </IPhoneFrame>
@@ -2356,6 +2701,8 @@ export default function Config() {
           </SaveBtn>
         </PhoneCol>
       </Grid>
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
+
     </Wrap>
   );
 }
