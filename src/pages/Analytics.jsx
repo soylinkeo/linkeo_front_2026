@@ -296,7 +296,7 @@ const load = useCallback(async (silent = false) => {
   if (!silent) setLoading(true);
   setErr("");
   try {
-    const json = await authFetch("/api/analytics/me");
+const json = await authFetch(`/api/analytics/me?t=${Date.now()}`);
     setData(json || {});
     setLive(true);
     setTimeout(() => setLive(false), 1500);
