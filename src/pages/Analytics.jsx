@@ -325,14 +325,13 @@ const json = await authFetch(`/api/analytics/me?t=${Date.now()}`);
   const ctr = views > 0 ? ((totalClicks / views) * 100).toFixed(1) : "0.0";
 
   // clicks = { whatsapp: 5, instagram: 3 } → array ordenado
+const clickNames = data?.clickNames || {};
 const clicksList = data?.clicks
   ? Object.entries(data.clicks)
       .map(([key, count]) => {
-        const isCustom = key.startsWith("custom_");
-        const brand = isCustom
-          ? { color: "#7c3aed", emoji: "🔗", label: key.replace("custom_", "Enlace ") }
-          : (BRAND[key] || BRAND.custom);
-        return { key, count: Number(count), brand };
+        const brand = BRAND[key] || BRAND.custom;
+        const label = clickNames[key] || brand.label || key;
+        return { key, count: Number(count), brand: { ...brand, label } };
       })
       .sort((a, b) => b.count - a.count)
   : [];
@@ -412,27 +411,20 @@ const clicksList = data?.clicks
                 </Empty>
               ) : (
                 <LinkList>
-                  {clicksList.map(({ key, count }, i) => {
-                    const brand = BRAND[key] || BRAND.custom;
-                    const pct   = Math.round((count / maxCount) * 100);
-                    return (
-                      <LinkRow key={key}>
-                        <LinkRank>#{i + 1}</LinkRank>
-                        <LinkIcon $bg={`${brand.color}20`}>
-                          {brand.emoji}
-                        </LinkIcon>
-                        <LinkInfo>
-                          <LinkName>{brand.label || key}</LinkName>
-                        </LinkInfo>
-                        <LinkBarWrap>
-                          <LinkBarBg>
-                            <LinkBarFill $pct={pct} />
-                          </LinkBarBg>
-                          <LinkCount key={count}>{fmt(count)}</LinkCount>
-                        </LinkBarWrap>
-                      </LinkRow>
-                    );
-                  })}
+              {clicksList.map(({ key, count, brand }, i) => {
+  const pct = Math.round((count / maxCount) * 100);
+  return (
+    <LinkRow key={key}>
+      <LinkRank>#{i + 1}</LinkRank>
+      <LinkIcon $bg={`${brand.color}20`}>{brand.emoji}</LinkIcon>
+      <LinkInfo><LinkName>{brand.label}</LinkName></LinkInfo>
+      <LinkBarWrap>
+        <LinkBarBg><LinkBarFill $pct={pct} /></LinkBarBg>
+        <LinkCount key={count}>{fmt(count)}</LinkCount>
+      </LinkBarWrap>
+    </LinkRow>
+  );
+})}
                 </LinkList>
               )}
             </SectionBody>
