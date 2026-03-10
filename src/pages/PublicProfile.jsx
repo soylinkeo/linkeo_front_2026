@@ -4,6 +4,20 @@ import styled, { keyframes, createGlobalStyle } from "styled-components";
 import { useParams } from "react-router-dom";
 import { API } from "../lib/api";
 
+const TRACK_URL = "https://linkeobackend2026-production.up.railway.app/api/analytics/track";
+
+async function trackEvent(slug, type, linkKey = "") {
+  try {
+    await fetch(TRACK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, type, linkKey }),
+    });
+  } catch {
+    // silencioso — nunca romper la UX
+  }
+}
+
 /* ================= ICONOS ================= */
 const Icons = {
   whatsapp: (p) => (<svg viewBox="0 0 24 24" width="18" height="18" {...p}><path fill="currentColor" d="M20.5 3.5A11 11 0 0 0 2.1 17.3L1 23l5.9-1.6A11 11 0 1 0 20.5 3.5Zm-8.9 16.4c-1.8 0-3.4-.5-4.8-1.5l-.3-.2-3.5.9.9-3.4-.2-.3a8.9 8.9 0 1 1 7.9 4.5Zm4.9-6.7c-.3-.2-1.6-.8-1.9-.9-.3-.1-.5-.2-.7.2-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-1.6-.8-2.7-1.5-3.8-3.4-.3-.5.3-.5.8-1.7.1-.2.1-.4 0-.6-.1-.2-.7-1.7-.9-2.3-.2-.5-.4-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.9.9-1.3 2.1-1.3 3.3 0 .4.1.8.2 1.1.3 1 .9 1.9 1.1 2.2.2.3 2.1 3.2 5.1 4.5 3 .1 3.6.1 5.8-2.1.3-.4.4-.8.3-1-.2-.1-.5-.2-.9-.4Z"/></svg>),
@@ -18,6 +32,7 @@ const Icons = {
   x:        (p) => (<svg viewBox="0 0 24 24" width="18" height="18" {...p}><path fill="currentColor" d="M4 3h5l3.6 5.1L17 3h3l-5.8 8.1L21 21h-5l-4-5.7L7 21H4l6.3-9L4 3Z"/></svg>),
   telegram: (p) => (<svg viewBox="0 0 24 24" width="18" height="18" {...p}><path fill="currentColor" d="M9.1 13.1 17.8 7 6.7 11.4l2.4 1.7v4.1l3.1-2.8 3.5 2.5c.4.2.8 0 .9-.5l2.2-10c.1-.6-.4-1.1-1-1L3.6 9.4c-.8.3-.7 1.5.1 1.7l5.4 1.4Z"/></svg>),
   pdf:      (p) => (<svg viewBox="0 0 24 24" width="18" height="18" {...p}><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm2 18H8v-2h8v2Zm0-4H8v-2h8v2Zm-3-7V3.5L18.5 9H13Z"/></svg>),
+  location: (p) => (<svg viewBox="0 0 24 24" width="18" height="18" {...p}><path fill="currentColor" d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7Zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z"/></svg>),
   custom:   (p) => (<svg viewBox="0 0 24 24" width="18" height="18" {...p}><path fill="currentColor" d="M12 2 9.5 8H3l5.2 3.8L6.6 18 12 14.4 17.4 18l-1.6-6.2L21 8h-6.5L12 2Z"/></svg>),
 };
 
@@ -34,6 +49,7 @@ const PLATFORMS = [
   { key: "x",         name: "X (Twitter)",   brand: "#111111" },
   { key: "telegram",  name: "Telegram",      brand: "#229ED9" },
   { key: "pdf",       name: "PDF",           brand: "#6b7280" },
+  { key: "location",  name: "Ubicación",     brand: "#EA4335" },
   { key: "custom",    name: "Personalizado", brand: "#7c3aed" },
 ];
 
@@ -70,6 +86,21 @@ function loadFont(family) {
   document.head.appendChild(l);
 }
 
+function getMapEmbedUrl(url) {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    const q = u.searchParams.get("q");
+    if (q) return `https://www.google.com/maps?q=${encodeURIComponent(q)}&output=embed&z=15`;
+    const placeMatch = u.pathname.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+    if (placeMatch) return `https://www.google.com/maps?q=${placeMatch[1]},${placeMatch[2]}&output=embed&z=15`;
+    if (u.hostname.includes("goo.gl") || u.hostname.includes("maps.app.goo.gl")) return url;
+    const coordMatch = url.match(/(-?\d+\.?\d+)[, ]+(-?\d+\.?\d+)/);
+    if (coordMatch) return `https://www.google.com/maps?q=${coordMatch[1]},${coordMatch[2]}&output=embed&z=15`;
+  } catch {}
+  return null;
+}
+
 const fadeUp = keyframes`from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}`;
 const blink  = keyframes`0%,100%{opacity:1}50%{opacity:.3}`;
 
@@ -94,8 +125,8 @@ const Page = styled.div`
 const Col = styled.div`
   max-width: 480px; margin: 0 auto;
   padding: ${p => p.$pad}px;
-  padding-top:    calc(${p => p.$pad}px + ${p => p.$offset}px + env(safe-area-inset-top,    0px));
-  padding-bottom: calc(${p => p.$pad}px +                       env(safe-area-inset-bottom, 0px));
+  padding-top:    calc(${p => p.$pad}px + ${p => p.$offset}px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(${p => p.$pad}px + env(safe-area-inset-bottom, 0px));
   display: flex; flex-direction: column; gap: ${p => p.$gap}px;
   animation: ${fadeUp} 0.38s ease both;
 `;
@@ -103,9 +134,7 @@ const Col = styled.div`
 const AvatarWrap = styled.div`
   display: flex;
   justify-content: ${p => p.$a === "left" ? "flex-start" : p.$a === "right" ? "flex-end" : "center"};
-  img { width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,.25);box-shadow:0 8px 28px rgba(0,0,0,.35); }
 `;
-/* ── Avatar Shape System ── */
 const HeroBannerWrap = styled.div`
   position: relative;
   width: calc(100% + ${p => p.$pad * 2}px);
@@ -117,41 +146,27 @@ const HeroBannerWrap = styled.div`
   flex-shrink: 0;
   margin-top: -${p => p.$offset || 0}px;
 `;
-
 const AvatarImgLayer = styled.div`
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
   background-image: url(${p => p.$src});
   background-size: ${p => p.$zoom || 120}%;
   background-position: ${p => p.$x || 50}% ${p => p.$y || 50}%;
   background-repeat: no-repeat;
 `;
-
 const HeroBannerGradient = styled.div`
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    transparent 35%,
-    rgba(0,0,0,${p => p.$opacity || 0.55}) 100%
-  );
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent 0%, transparent 35%, rgba(0,0,0,${p => p.$opacity || 0.55}) 100%);
   pointer-events: none;
 `;
-
 const AvatarRectWrap = styled.div`
   display: flex;
   justify-content: ${p => p.$a === 'left' ? 'flex-start' : p.$a === 'right' ? 'flex-end' : 'center'};
 `;
-
 const AvatarRect = styled.div`
   position: relative;
-  width: ${p => p.$size || 110}px;
-  height: ${p => p.$size || 110}px;
-  border-radius: ${p => p.$radius || 16}px;
-  overflow: hidden;
-  border: 3px solid rgba(255,255,255,0.25);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  width: ${p => p.$size || 110}px; height: ${p => p.$size || 110}px;
+  border-radius: ${p => p.$radius || 16}px; overflow: hidden;
+  border: 3px solid rgba(255,255,255,0.25); box-shadow: 0 8px 24px rgba(0,0,0,0.3);
   flex-shrink: 0;
 `;
 const Bio = styled.div`
@@ -159,12 +174,10 @@ const Bio = styled.div`
   h2 { font-size:1.45em;font-weight:700;letter-spacing:-.3px;line-height:1.15;text-shadow:0 2px 10px rgba(0,0,0,.35);margin-bottom:6px; }
   p  { font-size:.88em;opacity:.85;line-height:1.55;text-shadow:0 1px 5px rgba(0,0,0,.3); }
 `;
-
 const BtnRow = styled.div`
   display: flex;
   justify-content: ${p => p.$center ? "center" : "stretch"};
 `;
-
 const SocialBtn = styled.a`
   display:flex;align-items:center;gap:10px;text-decoration:none;width:100%;
   padding:13px 16px;border-radius:${p=>p.$r}px;
@@ -178,18 +191,7 @@ const SocialBtn = styled.a`
   &:hover{opacity:.9;transform:translateY(-1px);}&:active{transform:scale(.98);opacity:.85;}
   strong{flex:${p=>p.$ca==="left"?1:"initial"};min-width:0;}
 `;
-
-const VCardBtn = styled.button`
-  all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:10px;
-  width:100%;padding:13px 16px;border-radius:14px;
-  background:rgba(255,255,255,.13);backdrop-filter:blur(10px);
-  border:1px solid rgba(255,255,255,.22);color:inherit;font-size:.93em;font-weight:600;cursor:pointer;
-  -webkit-tap-highlight-color:transparent;transition:background .15s;
-  &:hover{background:rgba(255,255,255,.22);}&:active{background:rgba(255,255,255,.09);}
-`;
-
 const WLabel = styled.div`font-size:.72em;font-weight:700;opacity:.6;text-transform:uppercase;letter-spacing:.6px;`;
-
 const Carousel = styled.div`border-radius:18px;overflow:hidden;background:rgba(0,0,0,.18);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1);`;
 const Slide = styled.div`
   position:relative;min-height:${p=>p.$img?"200px":"80px"};padding:20px;
@@ -202,13 +204,11 @@ const CtrlRow = styled.div`display:flex;align-items:center;justify-content:space
 const Dots = styled.div`display:flex;gap:6px;align-items:center;`;
 const Dot  = styled.button`all:unset;width:${p=>p.$on?"18px":"7px"};height:7px;border-radius:4px;background:${p=>p.$on?"rgba(255,255,255,.9)":"rgba(255,255,255,.28)"};cursor:pointer;transition:all .2s ease;-webkit-tap-highlight-color:transparent;`;
 const Arr  = styled.button`all:unset;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px;color:rgba(255,255,255,.9);transition:background .15s;-webkit-tap-highlight-color:transparent;&:hover{background:rgba(255,255,255,.26);}&:disabled{opacity:.22;cursor:default;}`;
-
 const ICard  = styled.div`border-radius:18px;padding:18px;background:${p=>p.$bg||"rgba(255,255,255,.13)"};backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.15);display:flex;align-items:flex-start;gap:14px;`;
 const IIcon  = styled.span`font-size:1.8em;line-height:1;flex-shrink:0;`;
 const IBody  = styled.div`flex:1;min-width:0;`;
 const ITitle = styled.div`font-size:1em;font-weight:700;color:${p=>p.$c||"#fff"};margin-bottom:5px;line-height:1.2;`;
 const IText  = styled.div`font-size:.84em;color:${p=>p.$c||"#fff"};opacity:.85;line-height:1.55;`;
-
 const Gallery = styled.div`border-radius:18px;overflow:hidden;background:rgba(255,255,255,.07);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.1);padding:12px;display:flex;flex-direction:column;gap:10px;`;
 const GGrid  = styled.div`display:grid;grid-template-columns:repeat(2,1fr);gap:8px;`;
 const GItem  = styled.div`border-radius:12px;overflow:hidden;background:rgba(255,255,255,.08);cursor:pointer;transition:transform .15s;-webkit-tap-highlight-color:transparent;&:hover{transform:scale(1.02);}&:active{transform:scale(.98);}`;
@@ -216,12 +216,14 @@ const GThumb = styled.div`width:100%;aspect-ratio:1;overflow:hidden;background:r
 const GInfo  = styled.div`padding:7px 9px 9px;`;
 const GName  = styled.div`font-size:.78em;font-weight:700;color:${p=>p.$c||"#fff"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`;
 const GPrice = styled.div`font-size:.73em;color:${p=>p.$c||"#fff"};opacity:.68;margin-top:2px;`;
-
+const MapWrap = styled.div`border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,0.12);box-shadow:0 4px 20px rgba(0,0,0,0.3);background:rgba(0,0,0,0.2);display:flex;flex-direction:column;`;
+const MapIframe = styled.iframe`width:100%;height:220px;border:none;display:block;`;
+const MapFooter = styled.a`display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(0,0,0,0.25);color:inherit;text-decoration:none;font-size:0.82em;font-weight:600;opacity:0.85;transition:opacity 0.15s;border-top:1px solid rgba(255,255,255,0.08);&:hover{opacity:1;}`;
 const Center = styled.div`min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0b1018;font-family:system-ui,sans-serif;`;
 const Pulse  = styled.div`color:rgba(255,255,255,.45);font-size:15px;animation:${blink} 1.5s ease infinite;`;
 const Err    = styled.div`background:rgba(127,29,29,.35);border:1px solid rgba(239,68,68,.35);color:#fecaca;padding:18px 22px;border-radius:16px;max-width:320px;text-align:center;font-size:14px;line-height:1.5;`;
 
-/* =================== vCard =================== */
+/* ── vCard builder ── */
 function buildVCard(theme, links) {
   const esc = s => (s||"").replace(/\r?\n/g,"\\n").replace(/,/g,"\\,").replace(/;/g,"\\;");
   const note = [
@@ -242,7 +244,7 @@ function buildVCard(theme, links) {
   ].filter(Boolean).join("\r\n");
 }
 
-/* =================== WIDGETS =================== */
+/* ── Widgets ── */
 function CarouselWidget({ w }) {
   const slides = w.slides || [];
   const [i, setI] = useState(0);
@@ -265,7 +267,6 @@ function CarouselWidget({ w }) {
     </Carousel>
   );
 }
-
 function CardWidget({ w }) {
   if (!w.title && !w.text && !w.icon) return null;
   return (
@@ -278,7 +279,6 @@ function CardWidget({ w }) {
     </ICard>
   );
 }
-
 function GalleryWidget({ w, tc }) {
   const items = w.items || [];
   if (!items.length) return null;
@@ -301,23 +301,10 @@ function GalleryWidget({ w, tc }) {
     </Gallery>
   );
 }
-function getTrackingKey(link) {
-  if (!link) return "custom";
-  if (link.isCustom) return "custom";
-  return link.key || "custom";
-}
-async function trackEvent(slug, type, linkKey = "", linkName = "", linkUrl = "") {
-  try {
-    await fetch("https://linkeobackend2026-production.up.railway.app/api/analytics/track", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug, type, linkKey, linkName, linkUrl }),
-    });
-  } catch {
-    // silencioso
-  }
-}
-/* =================== PAGE =================== */
+
+/* ════════════════════════════════════════════════════════════
+   COMPONENTE PRINCIPAL
+════════════════════════════════════════════════════════════ */
 export default function PublicProfile() {
   const { slug } = useParams();
   const [doc,     setDoc]     = useState(null);
@@ -334,6 +321,7 @@ export default function PublicProfile() {
         if (!alive) return;
         if (!data) throw new Error("Respuesta vacía del servidor");
         setDoc(data);
+        // ── Registrar visita ──
         trackEvent(slug, "profile_view");
       } catch (e) {
         if (!alive) return;
@@ -391,14 +379,14 @@ export default function PublicProfile() {
     showVCard:       t.showVCard        ?? true,
     widgets:         Array.isArray(t.widgets) ? t.widgets : [],
     avatarShape:           t.avatarShape           ?? "circle",
-avatarPosX:            t.avatarPosX            ?? 50,
-avatarPosY:            t.avatarPosY            ?? 50,
-avatarZoom:            t.avatarZoom            ?? 120,
-avatarHeight:          t.avatarHeight          ?? 160,
-avatarRadius:          t.avatarRadius          ?? 0,
-avatarGradientOpacity: t.avatarGradientOpacity ?? 0.55,
-avatarRectSize:        t.avatarRectSize        ?? 110,
-avatarRectRadius:      t.avatarRectRadius      ?? 16,
+    avatarPosX:            t.avatarPosX            ?? 50,
+    avatarPosY:            t.avatarPosY            ?? 50,
+    avatarZoom:            t.avatarZoom            ?? 120,
+    avatarHeight:          t.avatarHeight          ?? 160,
+    avatarRadius:          t.avatarRadius          ?? 0,
+    avatarGradientOpacity: t.avatarGradientOpacity ?? 0.55,
+    avatarRectSize:        t.avatarRectSize        ?? 110,
+    avatarRectRadius:      t.avatarRectRadius      ?? 16,
   };
 
   useEffect(() => { loadFont(th.fontFamily); }, [th.fontFamily]);
@@ -415,7 +403,6 @@ avatarRectRadius:      t.avatarRectRadius      ?? 16,
     ? `linear-gradient(${th.bgAngle}deg,${th.bgColor} 0%,${th.bgColor2} 100%)`
     : th.bgMode === "solid" ? th.bgColor : "#000";
 
-  /* ── Platform links ── */
   const platformLinks = useMemo(() => {
     return (Array.isArray(doc?.links) ? doc.links : [])
       .filter(l => (l?.visible ?? true) && isValidUrl(l?.url))
@@ -423,21 +410,18 @@ avatarRectRadius:      t.avatarRectRadius      ?? 16,
       .map(l => ({ ...l, href: normalizeUrl(l.url), isCustom: false }));
   }, [doc]);
 
-  /* ── ✅ Custom links from doc.customLinks ── */
   const customLinks = useMemo(() => {
     return (Array.isArray(doc?.customLinks) ? doc.customLinks : [])
       .filter(l => (l?.visible ?? true) && l?.url && l.url.trim())
       .map(l => ({ ...l, href: normalizeUrl(l.url), isCustom: true }));
   }, [doc]);
 
-  /* ── All links combined for vCard ── */
   const allLinks = useMemo(() => {
-  const combined = [
-    ...platformLinks.map(l => ({ ...l, _sortOrder: l.order ?? 9999 })),
-    ...customLinks.map((l, i) => ({ ...l, _sortOrder: l.order ?? (9999 + i) })),
-  ];
-  return combined.sort((a, b) => a._sortOrder - b._sortOrder);
-}, [platformLinks, customLinks]);
+    return [
+      ...platformLinks.map(l => ({ ...l, _sortOrder: l.order ?? 9999 })),
+      ...customLinks.map((l, i) => ({ ...l, _sortOrder: l.order ?? (9999 + i) })),
+    ].sort((a, b) => a._sortOrder - b._sortOrder);
+  }, [platformLinks, customLinks]);
 
   const colors = (key) => {
     const brand = PLATFORMS.find(p=>p.key===key)?.brand || th.btnBg;
@@ -475,175 +459,99 @@ avatarRectRadius:      t.avatarRectRadius      ?? 16,
       >
         <Col $pad={th.containerPadding} $offset={th.heroOffset} $gap={th.linksGap}>
 
-     {th.avatarUrl && (() => {
-  const shape = th.avatarShape || "circle";
+          {/* ── Avatar ── */}
+          {th.avatarUrl && (() => {
+            const shape = th.avatarShape || "circle";
+            if (shape === "banner") return (
+              <HeroBannerWrap $pad={th.containerPadding} $height={th.avatarHeight} $radius={th.avatarRadius} $offset={th.heroOffset}>
+                <AvatarImgLayer $src={th.avatarUrl} $zoom={th.avatarZoom} $x={th.avatarPosX} $y={th.avatarPosY} />
+                <HeroBannerGradient $opacity={th.avatarGradientOpacity} />
+              </HeroBannerWrap>
+            );
+            if (shape === "rect") return (
+              <AvatarRectWrap $a={th.avatarAlign}>
+                <AvatarRect $size={th.avatarRectSize} $radius={th.avatarRectRadius}>
+                  <AvatarImgLayer $src={th.avatarUrl} $zoom={th.avatarZoom} $x={th.avatarPosX} $y={th.avatarPosY} />
+                </AvatarRect>
+              </AvatarRectWrap>
+            );
+            return (
+              <AvatarWrap $a={th.avatarAlign}>
+                <div style={{ position:"relative", width:96, height:96, borderRadius:"50%", overflow:"hidden", border:"3px solid rgba(255,255,255,0.25)", boxShadow:"0 8px 28px rgba(0,0,0,0.35)", flexShrink:0 }}>
+                  <AvatarImgLayer $src={th.avatarUrl} $zoom={th.avatarZoom} $x={th.avatarPosX} $y={th.avatarPosY} />
+                </div>
+              </AvatarWrap>
+            );
+          })()}
 
-  if (shape === "banner") {
-    return (
-      <HeroBannerWrap
-        $pad={th.containerPadding}
-        $height={th.avatarHeight}
-        $radius={th.avatarRadius}
-        $offset={th.heroOffset}
-      >
-        <AvatarImgLayer
-          $src={th.avatarUrl}
-          $zoom={th.avatarZoom}
-          $x={th.avatarPosX}
-          $y={th.avatarPosY}
-        />
-        <HeroBannerGradient $opacity={th.avatarGradientOpacity} />
-      </HeroBannerWrap>
-    );
-  }
-
-  if (shape === "rect") {
-    return (
-      <AvatarRectWrap $a={th.avatarAlign}>
-        <AvatarRect $size={th.avatarRectSize} $radius={th.avatarRectRadius}>
-          <AvatarImgLayer
-            $src={th.avatarUrl}
-            $zoom={th.avatarZoom}
-            $x={th.avatarPosX}
-            $y={th.avatarPosY}
-          />
-        </AvatarRect>
-      </AvatarRectWrap>
-    );
-  }
-
-  // circle — default
-  return (
-    <AvatarWrap $a={th.avatarAlign}>
-      <div style={{
-        position: "relative", width: 96, height: 96,
-        borderRadius: "50%", overflow: "hidden",
-        border: "3px solid rgba(255,255,255,0.25)",
-        boxShadow: "0 8px 28px rgba(0,0,0,0.35)",
-        flexShrink: 0,
-      }}>
-        <AvatarImgLayer
-          $src={th.avatarUrl}
-          $zoom={th.avatarZoom}
-          $x={th.avatarPosX}
-          $y={th.avatarPosY}
-        />
-      </div>
-    </AvatarWrap>
-  );
-})()}
-
+          {/* ── Bio ── */}
           <Bio $a={th.align}>
             <h2>{th.title?.trim() || "Tu nombre o marca"}</h2>
-        {th.description?.trim() && <p style={{ whiteSpace: 'pre-wrap' }}>{th.description.trim()}</p>}
+            {th.description?.trim() && <p style={{ whiteSpace: 'pre-wrap' }}>{th.description.trim()}</p>}
           </Bio>
 
-   {/* ── Todos los links en orden ── */}
- {allLinks.map((l, i) => {
-  const trackingKey = getTrackingKey(l, i);
-
-  if (l.isCustom) {
-    const bc =
-      th.btnVariant === "outline"
-        ? th.btnBorder
-        : th.btnUseBrand
-        ? "#7c3aed"
-        : "transparent";
-
-    const btnBg =
-      th.btnVariant === "filled"
-        ? th.btnUseBrand
-          ? "#7c3aed"
-          : th.btnBg
-        : th.btnVariant === "glass"
-        ? "rgba(255,255,255,.18)"
-        : "transparent";
-
-    return (
-      <BtnRow key={`custom-${l.id || i}`} $center={centerBtnW}>
-        <div style={{ width: centerBtnW ? `${th.btnWidth}%` : "100%", minWidth: 0 }}>
-          <SocialBtn
-            href={l.href}
-            target="_blank"
-            rel="noreferrer"
-            onClick={() =>
-              trackEvent(
-                slug,
-                "link_click",
-                trackingKey,
-                l.name || "Enlace",
-                l.href
-              )
+          {/* ── Links ── */}
+          {allLinks.map(l => {
+            // ── Ubicación con mapa ──
+            if (l.key === "location") {
+              const embedUrl = getMapEmbedUrl(l.url);
+              if (embedUrl) return (
+                <MapWrap key={`location-${l.order ?? 0}`}>
+                  <MapIframe src={embedUrl} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Ubicación" />
+                  <MapFooter href={l.href} target="_blank" rel="noreferrer"
+                    onClick={() => trackEvent(slug, "link_click", "location")}>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                      <path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7Zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z"/>
+                    </svg>
+                    Ver en Google Maps
+                  </MapFooter>
+                </MapWrap>
+              );
             }
-            $r={radius}
-            $bw={th.btnBorderWidth}
-            $bc={bc}
-            $bg={btnBg}
-            $tc={th.btnText}
-            $blur={th.btnVariant === "glass"}
-            $sh={th.btnShadow}
-            $flip={th.btnIconSide === "right"}
-            $ca={th.btnContentAlign}
-          >
-            <Icons.custom />
-            <strong>{l.name || "Enlace"}</strong>
-          </SocialBtn>
-        </div>
-      </BtnRow>
-    );
-  }
 
-  const { bg: lbg, border, text } = colors(l.key);
-  const Icon = Icons[l.key] || Icons.custom;
-  const platformName = PLATFORMS.find((p) => p.key === l.key)?.name || l.key;
+            // ── Custom links ──
+            if (l.isCustom) {
+              const bc    = th.btnVariant === "outline" ? th.btnBorder : th.btnUseBrand ? "#7c3aed" : "transparent";
+              const btnBg = th.btnVariant === "filled"  ? (th.btnUseBrand ? "#7c3aed" : th.btnBg)
+                          : th.btnVariant === "glass"   ? "rgba(255,255,255,.18)" : "transparent";
+              return (
+                <BtnRow key={`custom-${l.id}`} $center={centerBtnW}>
+                  <div style={{ width: centerBtnW ? `${th.btnWidth}%` : "100%", minWidth: 0 }}>
+                    <SocialBtn href={l.href} target="_blank" rel="noreferrer"
+                      onClick={() => trackEvent(slug, "link_click", "custom")}
+                      $r={radius} $bw={th.btnBorderWidth} $bc={bc} $bg={btnBg} $tc={th.btnText}
+                      $blur={th.btnVariant === "glass"} $sh={th.btnShadow}
+                      $flip={th.btnIconSide === "right"} $ca={th.btnContentAlign}>
+                      <Icons.custom />
+                      <strong>{l.name || "Enlace"}</strong>
+                    </SocialBtn>
+                  </div>
+                </BtnRow>
+              );
+            }
 
-  const bc =
-    th.btnVariant === "outline"
-      ? border
-      : th.btnUseBrand
-      ? border
-      : "transparent";
+            // ── Plataformas normales ──
+            const { bg: lbg, border, text } = colors(l.key);
+            const Icon  = Icons[l.key] || Icons.custom;
+            const bc    = th.btnVariant === "outline" ? border : th.btnUseBrand ? border : "transparent";
+            const btnBg = th.btnVariant === "filled"  ? lbg
+                        : th.btnVariant === "glass"   ? "rgba(255,255,255,.18)" : "transparent";
+            return (
+              <BtnRow key={`${l.key}-${l.order ?? 0}`} $center={centerBtnW}>
+                <div style={{ width: centerBtnW ? `${th.btnWidth}%` : "100%", minWidth: 0 }}>
+                  <SocialBtn href={l.href} target="_blank" rel="noreferrer"
+                    onClick={() => trackEvent(slug, "link_click", l.key)}
+                    $r={radius} $bw={th.btnBorderWidth} $bc={bc} $bg={btnBg} $tc={text}
+                    $blur={th.btnVariant === "glass"} $sh={th.btnShadow}
+                    $flip={th.btnIconSide === "right"} $ca={th.btnContentAlign}>
+                    <Icon />
+                    <strong>{PLATFORMS.find(p=>p.key===l.key)?.name || l.key}</strong>
+                  </SocialBtn>
+                </div>
+              </BtnRow>
+            );
+          })}
 
-  const btnBg =
-    th.btnVariant === "filled"
-      ? lbg
-      : th.btnVariant === "glass"
-      ? "rgba(255,255,255,.18)"
-      : "transparent";
-
-  return (
-    <BtnRow key={`${l.key}-${l.id || l.order || i}`} $center={centerBtnW}>
-      <div style={{ width: centerBtnW ? `${th.btnWidth}%` : "100%", minWidth: 0 }}>
-        <SocialBtn
-          href={l.href}
-          target="_blank"
-          rel="noreferrer"
-          onClick={() =>
-            trackEvent(
-              slug,
-              "link_click",
-              trackingKey,
-              platformName,
-              l.href
-            )
-          }
-          $r={radius}
-          $bw={th.btnBorderWidth}
-          $bc={bc}
-          $bg={btnBg}
-          $tc={text}
-          $blur={th.btnVariant === "glass"}
-          $sh={th.btnShadow}
-          $flip={th.btnIconSide === "right"}
-          $ca={th.btnContentAlign}
-        >
-          <Icon />
-          <strong>{platformName}</strong>
-        </SocialBtn>
-      </div>
-    </BtnRow>
-  );
-})}
           {/* ── Widgets ── */}
           {th.widgets.map(w => {
             if (w.visible === false) return null;
@@ -653,36 +561,29 @@ avatarRectRadius:      t.avatarRectRadius      ?? 16,
             return null;
           })}
 
-       
-        {/* ── vCard ── */}
-{(th.showVCard ?? true) && (() => {
-  const bc    = th.btnVariant === "outline" ? th.btnBorder : th.btnUseBrand ? th.btnBorder : "transparent";
-  const btnBg = th.btnVariant === "filled"  ? (th.btnUseBrand ? th.btnBg : th.btnBg)
-              : th.btnVariant === "glass"   ? "rgba(255,255,255,.18)"
-              : "transparent";
-  return (
-    <BtnRow $center={centerBtnW}>
-      <div style={{ width: centerBtnW ? `${th.btnWidth}%` : "100%", minWidth: 0 }}>
-        <SocialBtn
-          as="button"
-      onClick={() => {
-  saveVCard();
- trackEvent(slug, "link_click", "vcard", "Guardar contacto", "");
-}}
-          $r={radius} $bw={th.btnBorderWidth} $bc={bc} $bg={btnBg} $tc={th.btnText}
-          $blur={th.btnVariant === "glass"} $sh={th.btnShadow}
-          $flip={th.btnIconSide === "right"} $ca={th.btnContentAlign}
-          style={{ border: `${th.btnBorderWidth}px solid ${bc}`, cursor: "pointer" }}
-        >
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-            <path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm-1 14H5a1 1 0 0 1-1-1V8l8 5 8-5v9a1 1 0 0 1-1 1ZM12 11 4 6h16l-8 5Z"/>
-          </svg>
-          <strong>Guardar contacto</strong>
-        </SocialBtn>
-      </div>
-    </BtnRow>
-  );
-})()}
+          {/* ── vCard ── */}
+          {(th.showVCard ?? true) && (() => {
+            const bc    = th.btnVariant === "outline" ? th.btnBorder : th.btnUseBrand ? th.btnBorder : "transparent";
+            const btnBg = th.btnVariant === "filled"  ? th.btnBg
+                        : th.btnVariant === "glass"   ? "rgba(255,255,255,.18)" : "transparent";
+            return (
+              <BtnRow $center={centerBtnW}>
+                <div style={{ width: centerBtnW ? `${th.btnWidth}%` : "100%", minWidth: 0 }}>
+                  <SocialBtn as="button"
+                    onClick={() => { saveVCard(); trackEvent(slug, "link_click", "vcard"); }}
+                    $r={radius} $bw={th.btnBorderWidth} $bc={bc} $bg={btnBg} $tc={th.btnText}
+                    $blur={th.btnVariant === "glass"} $sh={th.btnShadow}
+                    $flip={th.btnIconSide === "right"} $ca={th.btnContentAlign}
+                    style={{ border: `${th.btnBorderWidth}px solid ${bc}`, cursor: "pointer" }}>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                      <path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm-1 14H5a1 1 0 0 1-1-1V8l8 5 8-5v9a1 1 0 0 1-1 1ZM12 11 4 6h16l-8 5Z"/>
+                    </svg>
+                    <strong>Guardar contacto</strong>
+                  </SocialBtn>
+                </div>
+              </BtnRow>
+            );
+          })()}
 
         </Col>
       </Page>
