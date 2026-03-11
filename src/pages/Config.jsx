@@ -68,7 +68,7 @@ const PLATFORMS = [
 const PLACEHOLDERS = {
   whatsapp: "https://wa.me/51999999999",
 phone: "+51 999 999 999",
-  email: "mailto:tu@correo.com",
+email: "tu@correo.com",
   instagram: "https://instagram.com/usuario",
   tiktok: "https://www.tiktok.com/@usuario",
   facebook: "https://facebook.com/tu.pagina",
@@ -2430,6 +2430,17 @@ return (
     }}
     onBlur={() => validateOne(p.key)}
   />
+) : p.key === 'email' ? (
+  <TextInput
+    type="email"
+    placeholder="tu@correo.com"
+    value={(it?.url || "").replace(/^mailto:/, "")}
+    onChange={e => {
+      const raw = e.target.value.trim();
+      setUrl(p.key, raw ? `mailto:${raw}` : "");
+    }}
+    onBlur={() => validateOne(p.key)}
+  />
 ) : (
   <TextInput
     type="text"
@@ -2438,7 +2449,8 @@ return (
     onChange={e => setUrl(p.key, e.target.value)}
     onBlur={() => validateOne(p.key)}
   />
-)}                        {errors[p.key] && <Error>{errors[p.key]}</Error>}
+)}
+                     {errors[p.key] && <Error>{errors[p.key]}</Error>}
                         <Label as="label" style={{ fontSize:13 }}>
                           <input type="checkbox" checked={it?.visible ?? true} onChange={e => setVisible(p.key, e.target.checked)} />
                           Visible en tu perfil
