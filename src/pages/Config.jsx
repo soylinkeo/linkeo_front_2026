@@ -135,7 +135,7 @@ const Wrap = styled.div`
   max-width: 1280px;
   margin: 0 auto;
   padding: 24px 20px 80px;
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+ font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   background: #f5f4f2;
   min-height: 100vh;
 `;
@@ -1489,6 +1489,50 @@ function DragSortList({ links, onReorder, onToggle, platforms, btnColorsFor, pro
     </div>
   );
 }
+const LinkeoTopBar = styled.div`
+font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  @media(max-width:600px){ padding:12px 14px; }
+`;
+
+const LinkeoBackBtn = styled.button`
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82em;
+  font-weight: 600;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  padding: 7px 14px;
+  border-radius: 999px;
+  transition: all 0.15s;
+  &:hover { background: #f3f4f6; color: #111827; }
+`;
+
+const LinkeoBadge = styled.div`
+  font-size: 0.75em;
+  font-weight: 600;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  &::before {
+    content: '';
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+  }
+`;
 /* =================== MAIN COMPONENT =================== */
 export default function Config() {
   const nav = useNavigate();
@@ -1913,7 +1957,25 @@ toast.error("Error al cargar", e.message || "Ocurrió un problema inesperado");
 
   const bgImages = profile.bgImages || [];
 
-  return (
+return (
+  <>
+    <LinkeoTopBar>
+      <LinkeoBackBtn onClick={() => nav(-1)}>
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2Z"/>
+        </svg>
+        Volver
+      </LinkeoBackBtn>
+
+      <div style={{ display:"flex", alignItems:"center", gap:8, fontWeight:800, fontSize:"1em" }}>
+        <div style={{ width:8, height:8, borderRadius:"50%", background:"#111827" }} />
+        LINKEO
+        <span style={{ fontWeight:400, color:"#6b7280", marginLeft:4 }}>Configurar perfil</span>
+      </div>
+
+      <LinkeoBadge>Mi perfil</LinkeoBadge>
+    </LinkeoTopBar>
+
     <Wrap>
       {user?.username && (
         <ProfileUrlBanner
@@ -2704,5 +2766,5 @@ toast.error("Error al cargar", e.message || "Ocurrió un problema inesperado");
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
 
     </Wrap>
-  );
+   </>   );
 }

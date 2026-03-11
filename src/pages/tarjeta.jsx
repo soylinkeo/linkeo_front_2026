@@ -3,6 +3,7 @@ import styled, { createGlobalStyle } from "styled-components";
 import { Rnd } from "react-rnd";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
+import { useNavigate } from "react-router-dom";
 import {
   User,
   Phone,
@@ -752,7 +753,58 @@ function CropperModal({ open, src, aspect = 1, outMax = 1200, onCancel, onDone }
   );
 }
 
+const LinkeoTopBar = styled.header`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  @media(max-width:600px){ padding:12px 14px; flex-wrap:wrap; gap:8px; }
+`;
+
+const LogoDot = styled.div`
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #111827;
+`;
+
+const LinkeoBackBtn = styled.button`
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82em;
+  font-weight: 600;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  padding: 7px 14px;
+  border-radius: 999px;
+  transition: all 0.15s;
+  &:hover { background: #f3f4f6; color: #111827; }
+`;
+
+const LinkeoBadge = styled.div`
+  font-size: 0.75em;
+  font-weight: 600;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  &::before {
+    content: '';
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+  }
+`;
+
 export default function Menu() {
+  const navigate = useNavigate();
   const [side, setSide] = useState("front");
   const [cards, setCards] = useState({ front: defaultCard(), back: defaultCard() });
   const [elementsBySide, setElementsBySide] = useState({ front: [], back: [] });
@@ -1467,7 +1519,23 @@ export default function Menu() {
   return (
     <>
       <GlobalStyle />
+  {/* ── NUEVO HEADER LINKEO ── */}
+    <LinkeoTopBar>
+      <LinkeoBackBtn onClick={() => navigate(-1)}>
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2Z"/>
+        </svg>
+        Volver
+      </LinkeoBackBtn>
 
+      <div style={{ display:"flex", alignItems:"center", gap:8, fontWeight:800, fontSize:"1em" }}>
+        <LogoDot />
+        LINKEO
+        <span style={{ fontWeight:400, color:"#6b7280", marginLeft:4 }}>Diseñar tarjeta</span>
+      </div>
+
+      <LinkeoBadge>Diseñador NFC</LinkeoBadge>
+    </LinkeoTopBar>
       {/* ✅ Cropper modal */}
       <CropperModal
         open={cropUI.open}
