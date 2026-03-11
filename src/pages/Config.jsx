@@ -1355,13 +1355,15 @@ function SortList({ links, onReorder, onToggle, platforms, btnColorsFor, profile
             </div>
 
             {/* Preview */}
-            <div style={{
-              flex:1, display:"flex", alignItems:"center", gap:8, padding:"9px 12px",
-              borderRadius: radius>20 ? 999 : radius,
-              border:`${profile.btnBorderWidth}px solid ${bc}`,
-              background:btnBg, color:text, fontSize:12, fontWeight:600,
-              minWidth:0, overflow:"hidden",
-            }}>
+          <div style={{
+  flex:1, display:"flex", alignItems:"center", gap:8, padding:"9px 12px",
+  borderRadius: 10,
+  border: "1.5px solid #e5e7eb",
+  background: "#f9fafb",
+  color: "#111827",
+  fontSize:12, fontWeight:600,
+  minWidth:0, overflow:"hidden",
+}}>
               {link.isCustom
                 ? React.createElement(Icons.custom)
                 : platform && Icons[platform.key] && React.createElement(Icons[platform.key])}
