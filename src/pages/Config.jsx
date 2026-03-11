@@ -67,7 +67,7 @@ const PLATFORMS = [
 
 const PLACEHOLDERS = {
   whatsapp: "https://wa.me/51999999999",
-  phone: "tel:+51999999999",
+phone: "+51 999 999 999",
   email: "mailto:tu@correo.com",
   instagram: "https://instagram.com/usuario",
   tiktok: "https://www.tiktok.com/@usuario",
@@ -2419,8 +2419,26 @@ return (
                             <span style={{ flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{normalizeUrl(it.url)}</span>
                           </UrlPreviewLink>
                         )}
-                        <TextInput type="text" placeholder={PLACEHOLDERS[p.key]} value={it?.url || ""} onChange={e => setUrl(p.key, e.target.value)} onBlur={() => validateOne(p.key)} />
-                        {errors[p.key] && <Error>{errors[p.key]}</Error>}
+{p.key === 'phone' ? (
+  <TextInput
+    type="tel"
+    placeholder="+51 999 999 999"
+    value={(it?.url || "").replace(/^tel:/, "")}
+    onChange={e => {
+      const raw = e.target.value.replace(/\s+/g, "");
+      setUrl(p.key, raw ? `tel:${raw}` : "");
+    }}
+    onBlur={() => validateOne(p.key)}
+  />
+) : (
+  <TextInput
+    type="text"
+    placeholder={PLACEHOLDERS[p.key]}
+    value={it?.url || ""}
+    onChange={e => setUrl(p.key, e.target.value)}
+    onBlur={() => validateOne(p.key)}
+  />
+)}                        {errors[p.key] && <Error>{errors[p.key]}</Error>}
                         <Label as="label" style={{ fontSize:13 }}>
                           <input type="checkbox" checked={it?.visible ?? true} onChange={e => setVisible(p.key, e.target.checked)} />
                           Visible en tu perfil
