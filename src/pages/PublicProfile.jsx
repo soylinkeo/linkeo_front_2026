@@ -4,8 +4,9 @@ import styled, { keyframes, createGlobalStyle } from "styled-components";
 import { useParams } from "react-router-dom";
 import { API } from "../lib/api";
 
-const TRACK_URL = "https://linkeobackend2026-production.up.railway.app/api/analytics/track";
-
+// const TRACK_URL = "https://linkeobackend2026-production.up.railway.app/api/analytics/track";
+const API_BASE = import.meta?.env?.VITE_API_BASE || "http://localhost:4000";
+const TRACK_URL = `${API_BASE}/api/analytics/track`;
 // Cambia trackEvent a:
 async function trackEvent(slug, type, linkKey = "", linkName = "") {
   try {
