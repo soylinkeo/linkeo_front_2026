@@ -2281,7 +2281,7 @@ export default function LandingLinkeo(){
         <div className="price-area">
           <LaunchBadge>Descuentos todo mayo</LaunchBadge><br />
           <OldPrice>Desde S/ 119.90 + S/ 10/mes</OldPrice>
-          <span className="price">Desde S/ 99.90 + S/ 10/mes</span>
+          <span className="price">Desde S/ 99.90 + S/ 30/mes</span>
         </div>
 
         <a
