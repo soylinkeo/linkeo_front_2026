@@ -28,28 +28,24 @@ const Page = styled.div`
   min-height: 100dvh;
 `;
 
-/* ── Navbar ── */
 const Nav = styled.nav`
   position: sticky;
   top: 0;
-  z-index: 20;
-  position: relative;   /* permite que el dropdown absoluto se posicione desde acá */
-  background: #000;
-  color: var(--white);
-  @media (min-width: 768px){
-    background: transparent; color: var(--text-dark);
-  }
+  z-index: 1000;
+  width: 100%;
+  background: #ffffff;
+  color: var(--text-dark);
+  box-shadow: 0 4px 18px rgba(0,0,0,.08);
 `;
 
 const NavInner = styled.div`
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: .75rem 1rem;
+  padding: .85rem 1rem;
   display: flex;
   align-items: center;
   gap: .75rem;
 
-  /* Logo a la izquierda, el resto a la derecha */
   .nav-right {
     margin-left: auto;
     display: flex;
@@ -58,7 +54,7 @@ const NavInner = styled.div`
   }
 
   @media (min-width: 768px){
-    padding: 2rem 1rem;
+    padding: 1rem 1rem;
     display: grid;
     grid-template-columns: auto 1fr auto;
     .nav-right { margin-left: 0; }
@@ -66,70 +62,91 @@ const NavInner = styled.div`
 `;
 
 const Logo = styled.a`
-  font-size: 1.5rem; font-weight: 700; color: var(--primary-color);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-dark);
   flex-shrink: 0;
-  span{ color: var(--white); }
-  @media (min-width: 768px){ span{ color: var(--text-dark); } }
+  letter-spacing: .5px;
+
+  span{ color: var(--primary-color-dark); }
 `;
 
-/* Login siempre visible — esquina derecha en móvil */
 const LoginBtn = styled.button`
   flex-shrink: 0;
   padding: .5rem 1.1rem;
-  border: 2px solid rgba(255,255,255,.7);
+  border: 2px solid var(--text-dark);
   border-radius: 999px;
   background: transparent;
-  color: var(--white);
+  color: var(--text-dark);
   font-weight: 700;
   font-size: .9rem;
   cursor: pointer;
-  transition: background .2s;
-  &:hover{ background: rgba(255,255,255,.15); }
+  transition: all .2s ease;
 
-  @media (min-width: 768px){
-    border-color: var(--text-dark);
-    color: var(--text-dark);
-    &:hover{ background: rgba(0,0,0,.06); }
+  &:hover{
+    background: var(--text-dark);
+    color: #fff;
   }
 `;
 
-/* Hamburguesa — solo en móvil, blanca */
 const MenuBtn = styled.button`
-  border: 0; background: transparent;
-  color: #fff !important;
-  -webkit-text-fill-color: #fff;
-  font-size: 1.8rem; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  i { color: #fff !important; }
-  @media (min-width: 768px){ display: none; }
+  border: 0;
+  background: transparent;
+  color: var(--text-dark);
+  font-size: 1.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  @media (min-width: 768px){
+    display: none;
+  }
 `;
 
-/* Links desplegables */
 const Links = styled.ul`
-  /* En móvil: cae como drawer debajo del navbar */
   position: absolute;
   top: 100%;
-  left: 0; right: 0;
-  list-style: none; margin: 0; padding: 1.5rem 1rem;
-  display: flex; flex-direction: column; align-items: center; gap: 1.5rem;
-  background: #111;
+  left: 0;
+  right: 0;
+  list-style: none;
+  margin: 0;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  background: #ffffff;
+  box-shadow: 0 10px 25px rgba(0,0,0,.08);
   transform: translateY(${p => (p.$open ? "0%" : "-120%")});
   opacity: ${p => (p.$open ? 1 : 0)};
   pointer-events: ${p => (p.$open ? "auto" : "none")};
   transition: transform .35s ease, opacity .25s ease;
-  z-index: 10;
-  a{ color: rgba(255,255,255,.85); font-weight: 600; font-size: 1rem; }
-  a:hover{ color: var(--white); }
+  z-index: 999;
+
+  a{
+    color: var(--text-dark);
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  a:hover{
+    color: var(--primary-color-dark);
+  }
 
   @media (min-width: 768px){
-    position: static; transform: none; opacity: 1; pointer-events: auto;
-    background: transparent; padding: 0;
-    flex-direction: row; gap: 1.5rem; justify-self: center;
-    a{ color: var(--text-dark); }
-    a:hover{ color: var(--primary-color); }
+    position: static;
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    flex-direction: row;
+    gap: 1.5rem;
+    justify-self: center;
   }
 `;
-
 /* ── Buttons ── */
 const Btn = styled.button`
   padding: .75rem 1.5rem; border: 0; border-radius: 10px;
@@ -252,13 +269,16 @@ const OldPrice = styled.span`
 `;
 
 const LaunchBadge = styled.span`
-  font-size: .7rem;
+  font-size: .68rem;
   background: #db6e09;
   color: #fff;
   border-radius: 999px;
-  padding: 2px 8px;
+  padding: 3px 10px;
   font-weight: 700;
   vertical-align: middle;
+  display: inline-block;
+  margin-bottom: 4px;
+  white-space: nowrap;
 `;
 /* ═══════════════════════════════════════════════════ */
 export default function LandingLinkeo(){
@@ -269,7 +289,7 @@ export default function LandingLinkeo(){
     <Page>
       <Global />
 
-      <Nav style={{ position: "sticky" }}>
+ <Nav>
         <NavInner>
           {/* Logo — izquierda */}
           <Logo href="#home">LINKEO<span> </span></Logo>
@@ -298,7 +318,7 @@ export default function LandingLinkeo(){
           <H1>Conecta con <span>un solo toque</span>.</H1>
           <P>Con Linkeo, comparte tu perfil, redes sociales o negocio con una tarjeta NFC moderna y personal. Tu identidad digital, ahora al alcance de un tap.</P>
           <Center>
-            <a href="https://wa.me/51987095046?text=Hola%2C%20deseo%20solicitar%20informaci%C3%B3n%20sobre%20las%20tarjetas%20NFC%20de%20Linkeo" target="_blank" rel="noreferrer">
+            <a href="https://wa.me/51937721429?text=Hola%2C%20deseo%20solicitar%20informaci%C3%B3n%20sobre%20las%20tarjetas%20NFC%20de%20Linkeo" target="_blank" rel="noreferrer">
               <Btn><i className="ri-whatsapp-line" /> Solicitar información</Btn>
             </a>
           </Center>
@@ -348,62 +368,87 @@ export default function LandingLinkeo(){
         <div><img src={imgTarjeta} alt="Tarjeta NFC Linkeo" /></div>
       </Explore>
 
-      {/* TARJETAS */}
-      <Special id="Tarjetas">
-        <H2>Nuestras Tarjetas NFC</H2>
-        <P>Elige el tipo de tarjeta que se adapta a tu estilo y necesidad. Todas con tecnología NFC para compartir tu identidad digital con un solo toque.</P>
-        <SpecialGrid>
-          <Card>
-            <img src={imgTarjeta} alt="Tarjeta Personal" />
-            <h4>Plan 1 Enlace</h4>
-            <p>Ideal si solo quieres llevar a un solo destino: WhatsApp, Instagram, tu web o portafolio. Te lo dejamos listo y funcionando.</p>
-            <Ratings><i className="ri-nfc-fill" /> <i className="ri-user-fill" /> <i className="ri-smartphone-line" /></Ratings>
-        <PriceRow>
-  <div>
-    <LaunchBadge>Lanzamiento</LaunchBadge><br/>
-    <OldPrice>S/ 79.90</OldPrice>
-    <span className="price">S/ 59.90</span>
-  </div>
-  <a href="https://wa.me/51987095046?text=Hola%2C%20quiero%20el%20Plan%201%20Enlace" target="_blank" rel="noreferrer">
-    <Btn>Más info</Btn>
-  </a>
-</PriceRow>
-          </Card>
-          <Card>
-            <img src={imgTarjeta} alt="Tarjeta Empresarial" />
-            <h4>Plan Personalizado</h4>
-            <p>Tarjeta + sistema personalizado para ti (diseño y configuración completa). Pago único. Ideal si quieres tu perfil listo y personalizado sin costos mensuales adicionales.</p>
-            <Ratings><i className="ri-building-line" /> <i className="ri-briefcase-line" /> <i className="ri-share-line" /></Ratings>
-       <PriceRow>
-  <div>
-    <LaunchBadge>Lanzamiento</LaunchBadge><br/>
-    <OldPrice>S/ 99.90</OldPrice>
-    <span className="price">S/ 79.90 (pago único)</span>
-  </div>
-  <a href="https://wa.me/51987095046?text=Hola%2C%20quiero%20el%20Plan%20Personalizado" target="_blank" rel="noreferrer">
-    <Btn>Más info</Btn>
-  </a>
-</PriceRow>
-          </Card>
-          <Card>
-            <img src={imgTarjeta} alt="Tarjeta Premium" />
-            <h4>Plan con Sistema</h4>
-            <p>Obtén tu URL Linkeo, enlaza todas tus redes y actualiza tus enlaces cuando quieras desde el sistema. Incluye panel de edición y cambios ilimitados mientras esté activo.</p>
-            <Ratings><i className="ri-star-fill" /> <i className="ri-bar-chart-box-line" /> <i className="ri-global-line" /></Ratings>
-          <PriceRow>
-  <div>
-    <LaunchBadge>Lanzamiento</LaunchBadge><br/>
-    <OldPrice>Desde S/ 119.90 + S/ 10/mes</OldPrice>
-    <span className="price">Desde S/ 99.90 + S/ 10/mes</span>
-  </div>
-  <a href="https://wa.me/51987095046?text=Hola%2C%20quiero%20el%20Plan%20con%20Sistema" target="_blank" rel="noreferrer">
-    <Btn>Más info</Btn>
-  </a>
-</PriceRow>
-          </Card>
-        </SpecialGrid>
-      </Special>
+  {/* TARJETAS */}
+<Special id="Tarjetas">
+  <H2>Nuestras Tarjetas NFC</H2>
+  <P>
+    Elige el tipo de tarjeta que se adapta a tu estilo y necesidad. Todas con tecnología NFC para compartir tu identidad digital con un solo toque.
+  </P>
 
+  <SpecialGrid>
+    <Card>
+      <img src={imgTarjeta} alt="Tarjeta Personal" />
+      <h4>Plan 1 Enlace</h4>
+      <p>
+        Ideal si deseas enlazar tu tarjeta NFC a una sola red social o enlace principal, como WhatsApp, Instagram, TikTok, Facebook, tu web o portafolio. Incluye diseño genérico listo para usar.
+      </p>
+      <Ratings>
+        <i className="ri-nfc-fill" /> 
+        <i className="ri-user-fill" /> 
+        <i className="ri-smartphone-line" />
+      </Ratings>
+
+      <PriceRow>
+        <div>
+          <LaunchBadge>Descuentos todo mayo</LaunchBadge><br />
+          <OldPrice>S/ 79.90</OldPrice>
+          <span className="price">S/ 59.90</span>
+        </div>
+        <a href="https://wa.me/51937721429?text=Hola%2C%20quiero%20el%20Plan%201%20Enlace" target="_blank" rel="noreferrer">
+          <Btn>Más info</Btn>
+        </a>
+      </PriceRow>
+    </Card>
+
+    <Card>
+      <img src={imgTarjeta} alt="Tarjeta Empresarial" />
+      <h4>Plan Personalizado</h4>
+      <p>
+        Perfecto si quieres enlazar tu tarjeta NFC a cualquier red social o enlace de tu preferencia. Incluye diseño personalizado a tu gusto, adaptado a tu marca, estilo o negocio.
+      </p>
+      <Ratings>
+        <i className="ri-building-line" /> 
+        <i className="ri-briefcase-line" /> 
+        <i className="ri-share-line" />
+      </Ratings>
+
+      <PriceRow>
+        <div>
+          <LaunchBadge>Descuentos todo mayo</LaunchBadge><br />
+          <OldPrice>S/ 99.90</OldPrice>
+          <span className="price">S/ 79.90 (pago único)</span>
+        </div>
+        <a href="https://wa.me/51937721429?text=Hola%2C%20quiero%20el%20Plan%20Personalizado" target="_blank" rel="noreferrer">
+          <Btn>Más info</Btn>
+        </a>
+      </PriceRow>
+    </Card>
+
+    <Card>
+      <img src={imgTarjeta} alt="Tarjeta Premium" />
+      <h4>Plan con Sistema</h4>
+      <p>
+        Pensado para quienes desean una experiencia más completa. Creamos una interfaz personalizada donde podrás mostrar en una sola página todas tus redes sociales, enlaces, contacto, ubicación, catálogo o información de tu negocio.
+      </p>
+      <Ratings>
+        <i className="ri-star-fill" /> 
+        <i className="ri-bar-chart-box-line" /> 
+        <i className="ri-global-line" />
+      </Ratings>
+
+      <PriceRow>
+        <div>
+          <LaunchBadge>Descuentos todo mayo</LaunchBadge><br />
+          <OldPrice>Desde S/ 119.90 + S/ 10/mes</OldPrice>
+          <span className="price">Desde S/ 99.90 + S/ 10/mes</span>
+        </div>
+        <a href="https://wa.me/51937721429?text=Hola%2C%20quiero%20el%20Plan%20con%20Sistema" target="_blank" rel="noreferrer">
+          <Btn>Más info</Btn>
+        </a>
+      </PriceRow>
+    </Card>
+  </SpecialGrid>
+</Special>
       {/* FOOTER */}
       <Footer id="contact">
         <FooterInner>
@@ -424,7 +469,7 @@ export default function LandingLinkeo(){
             <h4>Enlaces Útiles</h4>
             <ul>
               <li><a href="#">¿Cómo funciona?</a></li>
-              <li><a href="https://wa.me/51987095046" target="_blank" rel="noreferrer">WhatsApp</a></li>
+              <li><a href="https://wa.me/51937721429" target="_blank" rel="noreferrer">WhatsApp</a></li>
             </ul>
           </FooterCol>
           <FooterCol>
